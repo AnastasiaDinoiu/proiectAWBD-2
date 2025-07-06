@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<div th:fragment="alerts">
+    <!-- Success Alert -->
+    <div class="alert alert-success alert-dismissible fade show" role="alert"
+         th:if="${successMessage != null and not #strings.isEmpty(successMessage)}">
+        <i class="fas fa-check-circle me-2"></i>
+        <span th:text="${successMessage}"></span>
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
+
+    <!-- Error Alert -->
+    <div class="alert alert-danger alert-dismissible fade show" role="alert"
+         th:if="${errorMessage != null and not #strings.isEmpty(errorMessage)}">
+        <i class="fas fa-exclamation-circle me-2"></i>
+        <span th:text="${errorMessage}"></span>
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
+
+    <!-- Info Alert -->
+    <div class="alert alert-info alert-dismissible fade show" role="alert"
+         th:if="${infoMessage != null and not #strings.isEmpty(infoMessage)}">
+        <i class="fas fa-info-circle me-2"></i>
+        <span th:text="${infoMessage}"></span>
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
+
+    <!-- Warning Alert -->
+    <div class="alert alert-warning alert-dismissible fade show" role="alert"
+         th:if="${warningMessage != null and not #strings.isEmpty(warningMessage)}">
+        <i class="fas fa-exclamation-triangle me-2"></i>
+        <span th:text="${warningMessage}"></span>
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
+</div>
+</html>

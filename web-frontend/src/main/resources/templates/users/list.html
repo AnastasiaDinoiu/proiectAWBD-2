@@ -1,0 +1,237 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security"
+      layout:decorate="~{layout/main}">
+<head>
+    <title>Users - Library Management</title>
+    <style>
+        .page-header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border-radius: 20px;
+            padding: 40px;
+            margin-bottom: 40px;
+        }
+        
+        .user-card {
+            background: white;
+            border-radius: 15px;
+            padding: 25px;
+            margin-bottom: 20px;
+            box-shadow: 0 8px 25px rgba(0,0,0,0.1);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            border-left: 5px solid #667eea;
+        }
+        
+        .user-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 15px 35px rgba(0,0,0,0.15);
+        }
+        
+        .user-name {
+            font-size: 1.3rem;
+            font-weight: 700;
+            color: #2d3748;
+            margin-bottom: 10px;
+        }
+        
+        .user-details {
+            color: #718096;
+            font-size: 0.95rem;
+        }
+        
+        .user-role {
+            display: inline-block;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+        
+        .role-admin {
+            background-color: #fed7d7;
+            color: #c53030;
+        }
+        
+        .role-librarian {
+            background-color: #d6f5d6;
+            color: #2f855a;
+        }
+        
+        .role-user {
+            background-color: #bee3f8;
+            color: #2b6cb0;
+        }
+        
+        .user-status {
+            display: inline-block;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 0.8rem;
+            font-weight: 600;
+        }
+        
+        .status-active {
+            background-color: #c6f6d5;
+            color: #22543d;
+        }
+        
+        .status-inactive {
+            background-color: #fed7d7;
+            color: #742a2a;
+        }
+        
+        .search-card {
+            background: white;
+            border-radius: 15px;
+            padding: 25px;
+            margin-bottom: 30px;
+            box-shadow: 0 8px 25px rgba(0,0,0,0.1);
+        }
+        
+        .action-btn {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 8px;
+            text-decoration: none;
+            font-size: 0.9rem;
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+        
+        .action-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 15px rgba(102, 126, 234, 0.3);
+            color: white;
+            text-decoration: none;
+        }
+        
+        .empty-state {
+            text-align: center;
+            padding: 60px 20px;
+            color: #718096;
+        }
+        
+        .empty-state i {
+            font-size: 4rem;
+            margin-bottom: 20px;
+            color: #e2e8f0;
+        }
+    </style>
+</head>
+<body>
+<div layout:fragment="content">
+    <!-- Page Header -->
+    <div class="page-header">
+        <div class="container-fluid">
+            <div class="row align-items-center">
+                <div class="col">
+                    <h1 class="mb-0">
+                        <i class="fas fa-users me-3"></i>
+                        Users
+                    </h1>
+                    <p class="mb-0 mt-2 opacity-75">Manage library users and their accounts</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="container-fluid">
+        <!-- Service Warning -->
+        <div th:if="${serviceWarning}" class="alert alert-warning alert-dismissible fade show" role="alert">
+            <i class="fas fa-exclamation-triangle me-2"></i>
+            <span th:text="${serviceWarning}">Service warning</span>
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+
+        <!-- Error Message -->
+        <div th:if="${error}" class="alert alert-danger alert-dismissible fade show" role="alert">
+            <i class="fas fa-exclamation-triangle me-2"></i>
+            <span th:text="${error}">Error message</span>
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+
+        <!-- Users List -->
+        <div th:if="${userPage != null and userPage.content != null and !userPage.content.empty}">
+            <div th:each="user : ${userPage.content}" class="user-card">
+                <div class="d-flex justify-content-between align-items-start">
+                    <div class="flex-grow-1">
+                        <h3 class="user-name" 
+                            th:text="${user.firstName != null and user.lastName != null ? 
+                                     user.firstName + ' ' + user.lastName : user.username}">User Name</h3>
+                        
+                        <div class="user-details">
+                            <p class="mb-1">
+                                <i class="fas fa-user me-2"></i>
+                                <strong>Username:</strong> <span th:text="${user.username}">username</span>
+                            </p>
+                            <p class="mb-1">
+                                <i class="fas fa-envelope me-2"></i>
+                                <strong>Email:</strong> <span th:text="${user.email}">email@example.com</span>
+                            </p>
+                            <div class="mb-1">
+                                <i class="fas fa-user-tag me-2"></i>
+                                <strong>Role:</strong>
+                                <span class="user-role ms-1" 
+                                      th:classappend="${'role-' + #strings.toLowerCase(user.role)}"
+                                      th:text="${user.role}">USER</span>
+                            </div>
+                            <div class="mb-0">
+                                <i class="fas fa-circle me-2"></i>
+                                <strong>Status:</strong>
+                                <span class="user-status ms-1" 
+                                      th:classappend="${user.active ? 'status-active' : 'status-inactive'}"
+                                      th:text="${user.active ? 'Active' : 'Inactive'}">Active</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="text-end">
+                        <a th:href="@{/users/{id}(id=${user.id})}" class="action-btn">
+                            <i class="fas fa-eye me-1"></i>View Details
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Empty State -->
+        <div th:if="${userPage == null or userPage.content == null or userPage.content.empty}" class="empty-state">
+            <i class="fas fa-users"></i>
+            <h3>No Users Found</h3>
+            <p>No users are available in the system or the user service is unavailable.</p>
+        </div>
+
+        <!-- Pagination -->
+        <div th:if="${userPage != null and userPage.totalPages > 1}" class="pagination-card">
+            <nav>
+                <div class="pagination">
+                    <div class="page-item" th:classappend="${currentPage == 0} ? 'disabled'">
+                        <a class="page-link" th:href="@{/users(page=${currentPage - 1}, size=${pageSize})}">
+                            <i class="fas fa-chevron-left"></i> Previous
+                        </a>
+                    </div>
+                    
+                    <div class="page-item" 
+                         th:each="page : ${#numbers.sequence(0, userPage.totalPages - 1)}"
+                         th:classappend="${page == currentPage} ? 'active'">
+                        <a class="page-link" 
+                           th:href="@{/users(page=${page}, size=${pageSize})}"
+                           th:text="${page + 1}">1</a>
+                    </div>
+                    
+                    <div class="page-item" th:classappend="${currentPage == userPage.totalPages - 1} ? 'disabled'">
+                        <a class="page-link" th:href="@{/users(page=${currentPage + 1}, size=${pageSize})}">
+                            Next <i class="fas fa-chevron-right"></i>
+                        </a>
+                    </div>
+                </div>
+            </nav>
+        </div>
+    </div>
+</div>
+</body>
+</html>

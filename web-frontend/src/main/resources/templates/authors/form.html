@@ -1,0 +1,623 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layout/main}">
+<head>
+    <title th:text="${author.id != null} ? 'Edit Author' : 'New Author'">Author Form</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap');
+        
+        * {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+        }
+        
+        body {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            position: relative;
+        }
+        
+        body::before {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: 
+                radial-gradient(circle at 20% 80%, rgba(120, 119, 198, 0.3) 0%, transparent 50%),
+                radial-gradient(circle at 80% 20%, rgba(255, 119, 198, 0.15) 0%, transparent 50%),
+                radial-gradient(circle at 40% 40%, rgba(120, 200, 255, 0.1) 0%, transparent 50%);
+            pointer-events: none;
+            z-index: -1;
+        }
+        
+        .page-header {
+            background: linear-gradient(135deg, rgba(255,255,255,0.25) 0%, rgba(255,255,255,0.1) 100%);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(255,255,255,0.2);
+            color: white;
+            border-radius: 24px;
+            padding: 50px;
+            margin-bottom: 40px;
+            position: relative;
+            overflow: hidden;
+            box-shadow: 
+                0 25px 50px rgba(0,0,0,0.1),
+                inset 0 1px 0 rgba(255,255,255,0.2);
+        }
+        
+        .page-header::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><defs><pattern id="authors" width="30" height="30" patternUnits="userSpaceOnUse"><circle cx="15" cy="8" r="3" fill="rgba(255,255,255,0.08)"/><rect x="8" y="16" width="14" height="2" rx="1" fill="rgba(255,255,255,0.06)"/><rect x="10" y="20" width="10" height="2" rx="1" fill="rgba(255,255,255,0.04)"/></pattern></defs><rect width="100" height="100" fill="url(%23authors)"/></svg>');
+            opacity: 0.4;
+        }
+        
+        .page-header .content {
+            position: relative;
+            z-index: 1;
+        }
+        
+        .page-title {
+            font-size: 3.2rem;
+            font-weight: 800;
+            margin-bottom: 15px;
+            text-shadow: 2px 2px 8px rgba(0,0,0,0.3);
+            letter-spacing: -1px;
+            background: linear-gradient(135deg, #ffffff 0%, #f0f8ff 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+        
+        .page-title i {
+            font-size: 2.5rem;
+            background: linear-gradient(135deg, #ffffff 0%, #f0f8ff 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        
+        .page-subtitle {
+            font-size: 1.2rem;
+            opacity: 0.95;
+            margin-bottom: 0;
+            font-weight: 400;
+        }
+        
+        /* Form Card */
+        .form-card {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(20px);
+            border-radius: 24px;
+            box-shadow: 
+                0 20px 40px rgba(0,0,0,0.1),
+                inset 0 1px 0 rgba(255,255,255,0.8);
+            border: 1px solid rgba(255,255,255,0.3);
+            overflow: hidden;
+            margin-bottom: 30px;
+        }
+        
+        .form-header {
+            background: linear-gradient(135deg, rgba(102, 126, 234, 0.1) 0%, rgba(255,255,255,0.8) 100%);
+            border-bottom: 1px solid rgba(102, 126, 234, 0.15);
+            padding: 25px 30px;
+            position: relative;
+        }
+        
+        .form-header::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 2px;
+            background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
+        }
+        
+        .form-title {
+            margin: 0;
+            color: #2d3748;
+            font-weight: 700;
+            font-size: 1.4rem;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        
+        .form-title i {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            font-size: 1.2rem;
+        }
+        
+        .form-body {
+            padding: 40px;
+        }
+        
+        /* Form Groups */
+        .form-group {
+            margin-bottom: 30px;
+            position: relative;
+        }
+        
+        .form-label {
+            display: block;
+            font-weight: 600;
+            color: #4a5568;
+            margin-bottom: 8px;
+            font-size: 1rem;
+        }
+        
+        .required-indicator::after {
+            content: " *";
+            color: #e53e3e;
+            font-weight: 700;
+        }
+        
+        .form-control {
+            width: 100%;
+            padding: 12px 16px;
+            border: 2px solid rgba(102, 126, 234, 0.15);
+            border-radius: 12px;
+            font-size: 1rem;
+            transition: all 0.3s ease;
+            background: rgba(255, 255, 255, 0.8);
+            backdrop-filter: blur(10px);
+        }
+        
+        .form-control:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+            background: rgba(255, 255, 255, 0.95);
+        }
+        
+        .form-control.is-invalid {
+            border-color: #e53e3e;
+            box-shadow: 0 0 0 3px rgba(229, 62, 62, 0.1);
+        }
+        
+        .invalid-feedback {
+            display: block;
+            color: #e53e3e;
+            font-size: 0.875rem;
+            margin-top: 5px;
+            font-weight: 500;
+        }
+        
+        /* Input Groups */
+        .input-group {
+            display: flex;
+            align-items: center;
+            position: relative;
+        }
+        
+        .input-group-text {
+            background: linear-gradient(135deg, rgba(102, 126, 234, 0.1) 0%, rgba(255,255,255,0.8) 100%);
+            border: 2px solid rgba(102, 126, 234, 0.15);
+            border-right: none;
+            border-radius: 12px 0 0 12px;
+            padding: 12px 16px;
+            color: #667eea;
+            font-weight: 600;
+        }
+        
+        .input-group .form-control {
+            border-left: none;
+            border-radius: 0 12px 12px 0;
+        }
+        
+        .input-group:focus-within .input-group-text {
+            border-color: #667eea;
+            background: linear-gradient(135deg, rgba(102, 126, 234, 0.15) 0%, rgba(255,255,255,0.9) 100%);
+        }
+        
+        /* Textarea */
+        textarea.form-control {
+            min-height: 120px;
+            resize: vertical;
+        }
+        
+        /* Form Sections */
+        .form-section {
+            margin-bottom: 40px;
+            padding: 30px;
+            background: linear-gradient(135deg, rgba(102, 126, 234, 0.03) 0%, rgba(255,255,255,0.5) 100%);
+            border-radius: 16px;
+            border: 1px solid rgba(102, 126, 234, 0.08);
+        }
+        
+        .section-title {
+            color: #2d3748;
+            font-weight: 700;
+            font-size: 1.3rem;
+            margin-bottom: 25px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        
+        .section-title i {
+            color: #667eea;
+            font-size: 1.1rem;
+        }
+        
+        /* Form Actions */
+        .form-actions {
+            padding: 25px 40px;
+            background: linear-gradient(135deg, rgba(102, 126, 234, 0.05) 0%, rgba(255,255,255,0.8) 100%);
+            border-top: 1px solid rgba(102, 126, 234, 0.15);
+        }
+        
+        /* Buttons */
+        .btn {
+            padding: 12px 24px;
+            border-radius: 12px;
+            font-weight: 600;
+            font-size: 1rem;
+            border: none;
+            text-decoration: none;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            position: relative;
+            overflow: hidden;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            cursor: pointer;
+        }
+        
+        .btn::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
+            transition: left 0.5s ease;
+        }
+        
+        .btn:hover::before {
+            left: 100%;
+        }
+        
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            box-shadow: 0 8px 20px rgba(102, 126, 234, 0.3);
+        }
+        
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 12px 30px rgba(102, 126, 234, 0.4);
+            color: white;
+            text-decoration: none;
+        }
+        
+        .btn-secondary {
+            background: linear-gradient(135deg, #a0aec0 0%, #718096 100%);
+            color: white;
+            box-shadow: 0 8px 20px rgba(160, 174, 192, 0.3);
+        }
+        
+        .btn-secondary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 12px 30px rgba(160, 174, 192, 0.4);
+            color: white;
+            text-decoration: none;
+        }
+        
+        /* Character Counter */
+        .character-counter {
+            font-size: 0.8rem;
+            color: #718096;
+            text-align: right;
+            margin-top: 5px;
+        }
+        
+        /* Responsive Design */
+        @media (max-width: 768px) {
+            .page-header {
+                padding: 30px 25px;
+                margin-bottom: 30px;
+                border-radius: 20px;
+            }
+            
+            .page-title {
+                font-size: 2.5rem;
+                flex-direction: column;
+                text-align: center;
+                gap: 10px;
+            }
+            
+            .page-subtitle {
+                font-size: 1.1rem;
+                text-align: center;
+            }
+            
+            .form-body {
+                padding: 30px 25px;
+            }
+            
+            .form-section {
+                padding: 25px 20px;
+            }
+            
+            .form-actions {
+                padding: 20px 25px;
+            }
+            
+            .btn {
+                width: 100%;
+                justify-content: center;
+                margin-bottom: 10px;
+            }
+        }
+        
+        @media (max-width: 480px) {
+            .page-header {
+                padding: 25px 20px;
+            }
+            
+            .page-title {
+                font-size: 2rem;
+            }
+            
+            .form-body {
+                padding: 25px 20px;
+            }
+            
+            .form-section {
+                padding: 20px 15px;
+                margin-bottom: 30px;
+            }
+        }
+        
+        /* Form Animations */
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        
+        .form-card {
+            animation: fadeInUp 0.6s ease forwards;
+        }
+        
+        .form-group {
+            animation: fadeInUp 0.6s ease forwards;
+        }
+        
+        .form-group:nth-child(2) {
+            animation-delay: 0.1s;
+        }
+        
+        .form-group:nth-child(3) {
+            animation-delay: 0.2s;
+        }
+        
+        .form-group:nth-child(4) {
+            animation-delay: 0.3s;
+        }
+    </style>
+</head>
+<body>
+<div layout:fragment="content">
+    <!-- Page Header -->
+    <div class="page-header">
+        <div class="content">
+            <h1 class="page-title">
+                <i class="fas fa-user-edit"></i>
+                <span th:text="${author.id != null} ? 'Edit Author' : 'Add New Author'">Author Form</span>
+            </h1>
+            <p class="page-subtitle" th:if="${author.id != null}">
+                Editing author: <strong th:text="${author.firstName + ' ' + author.lastName}">Author Name</strong>
+            </p>
+            <p class="page-subtitle" th:if="${author.id == null}">
+                Enter the details for the new author you want to add to the library
+            </p>
+        </div>
+    </div>
+
+    <!-- Error Message -->
+    <div th:if="${error}" class="alert alert-danger alert-dismissible fade show" role="alert">
+        <i class="fas fa-exclamation-triangle me-2"></i>
+        <span th:text="${error}">Error message</span>
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+
+    <!-- Form Card -->
+    <div class="form-card">
+        <div class="form-header">
+            <h4 class="form-title">
+                <i class="fas fa-user-circle"></i>
+                Author Information
+            </h4>
+        </div>
+        
+        <!-- FIXED FORM ACTION -->
+        <form th:action="@{${author.id != null ? '/authors/' + author.id + '/edit' : '/authors/new'}}"
+              method="post" th:object="${author}" class="needs-validation" novalidate>
+            
+            <div class="form-body">
+                <!-- Basic Information Section -->
+                <div class="form-section">
+                    <h3 class="section-title">
+                        <i class="fas fa-id-card"></i>
+                        Basic Information
+                    </h3>
+                    
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label for="firstName" class="form-label required-indicator">First Name</label>
+                                <div class="input-group">
+                                    <span class="input-group-text"><i class="fas fa-user"></i></span>
+                                    <input type="text" class="form-control" id="firstName"
+                                           placeholder="Enter first name"
+                                           th:field="*{firstName}" required
+                                           th:classappend="${#fields.hasErrors('firstName')} ? 'is-invalid' : ''">
+                                </div>
+                                <div class="invalid-feedback" th:if="${#fields.hasErrors('firstName')}"
+                                     th:errors="*{firstName}">First name error</div>
+                            </div>
+                        </div>
+                        
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label for="lastName" class="form-label required-indicator">Last Name</label>
+                                <div class="input-group">
+                                    <span class="input-group-text"><i class="fas fa-user"></i></span>
+                                    <input type="text" class="form-control" id="lastName"
+                                           placeholder="Enter last name"
+                                           th:field="*{lastName}" required
+                                           th:classappend="${#fields.hasErrors('lastName')} ? 'is-invalid' : ''">
+                                </div>
+                                <div class="invalid-feedback" th:if="${#fields.hasErrors('lastName')}"
+                                     th:errors="*{lastName}">Last name error</div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label for="nationality" class="form-label">Nationality</label>
+                                <div class="input-group">
+                                    <span class="input-group-text"><i class="fas fa-globe"></i></span>
+                                    <input type="text" class="form-control" id="nationality"
+                                           placeholder="Enter nationality"
+                                           th:field="*{nationality}"
+                                           th:classappend="${#fields.hasErrors('nationality')} ? 'is-invalid' : ''">
+                                </div>
+                                <div class="invalid-feedback" th:if="${#fields.hasErrors('nationality')}"
+                                     th:errors="*{nationality}">Nationality error</div>
+                            </div>
+                        </div>
+                        
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label for="birthDate" class="form-label">Birth Date</label>
+                                <div class="input-group">
+                                    <span class="input-group-text"><i class="fas fa-calendar-alt"></i></span>
+                                    <input type="date" class="form-control" id="birthDate"
+                                           th:field="*{birthDate}"
+                                           th:classappend="${#fields.hasErrors('birthDate')} ? 'is-invalid' : ''">
+                                </div>
+                                <div class="invalid-feedback" th:if="${#fields.hasErrors('birthDate')}"
+                                     th:errors="*{birthDate}">Birth date error</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Biography Section -->
+                <div class="form-section">
+                    <h3 class="section-title">
+                        <i class="fas fa-quote-left"></i>
+                        Biography
+                    </h3>
+                    
+                    <div class="form-group">
+                        <label for="biography" class="form-label">Biography</label>
+                        <textarea class="form-control" id="biography" rows="6"
+                                  th:field="*{biography}"
+                                  placeholder="Enter a brief biography of the author..."
+                                  th:classappend="${#fields.hasErrors('biography')} ? 'is-invalid' : ''"></textarea>
+                        <div class="character-counter">
+                            <span id="currentCount">0</span> / <span id="maxCount">1000</span> characters
+                        </div>
+                        <div class="invalid-feedback" th:if="${#fields.hasErrors('biography')}"
+                             th:errors="*{biography}">Biography error</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Form Actions -->
+            <div class="form-actions">
+                <div class="d-flex justify-content-end gap-3 flex-wrap">
+                    <a href="/authors" th:href="@{/authors}" class="btn btn-secondary">
+                        <i class="fas fa-times"></i>Cancel
+                    </a>
+
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-save"></i>
+                        <span th:text="${author.id != null} ? 'Update Author' : 'Save Author'">Save</span>
+                    </button>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Character counter for biography
+        const biographyTextarea = document.getElementById('biography');
+        const currentCount = document.getElementById('currentCount');
+        const maxCount = document.getElementById('maxCount');
+        
+        function updateCharacterCount() {
+            const length = biographyTextarea.value.length;
+            currentCount.textContent = length;
+            
+            if (length > 800) {
+                currentCount.style.color = '#e53e3e';
+            } else if (length > 600) {
+                currentCount.style.color = '#f6ad55';
+            } else {
+                currentCount.style.color = '#667eea';
+            }
+        }
+        
+        // Initialize character count
+        updateCharacterCount();
+        
+        // Update on input
+        biographyTextarea.addEventListener('input', updateCharacterCount);
+        
+        // Form validation
+        const form = document.querySelector('.needs-validation');
+        form.addEventListener('submit', function(event) {
+            if (!form.checkValidity()) {
+                event.preventDefault();
+                event.stopPropagation();
+            }
+            form.classList.add('was-validated');
+        });
+        
+        // Add loading state to submit button
+        const submitButton = document.querySelector('button[type="submit"]');
+        form.addEventListener('submit', function() {
+            if (form.checkValidity()) {
+                const originalText = submitButton.innerHTML;
+                submitButton.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Saving...';
+                submitButton.disabled = true;
+                
+                // Fallback to re-enable button
+                setTimeout(() => {
+                    submitButton.innerHTML = originalText;
+                    submitButton.disabled = false;
+                }, 5000);
+            }
+        });
+    });
+</script>
+</body>
+</html>
