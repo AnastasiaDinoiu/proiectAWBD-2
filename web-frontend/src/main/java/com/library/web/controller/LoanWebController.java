@@ -1,6 +1,9 @@
 package com.library.web.controller;
 
 import com.library.web.dto.LoanDTO;
+import com.library.web.dto.LoanPageDTO;
+import com.library.web.dto.BookPageDTO;
+import com.library.web.dto.UserPageDTO;
 import com.library.web.service.LoanWebService;
 import com.library.web.service.UserWebService;
 import com.library.web.service.BookWebService;
@@ -13,6 +16,8 @@ import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
+
+import java.util.Collections;
 
 @Controller
 @RequestMapping("/loans")
@@ -37,19 +42,29 @@ public class LoanWebController {
         log.info("Listing loans - page: {}, size: {}", page, size);
 
         try {
-            var loanPage = loanWebService.getAllLoans(page, size, sortBy, sortDirection, status);
+            LoanPageDTO loanPage = loanWebService.getAllLoans(page, size, sortBy, sortDirection, status);
+            
+            if (loanPage == null) {
+                log.warn("LoanWebService returned null, creating empty page");
+                loanPage = createEmptyLoanPage();
+            }
 
             model.addAttribute("loanPage", loanPage);
             model.addAttribute("currentPage", page);
+            model.addAttribute("pageSize", size);
             model.addAttribute("sortBy", sortBy);
             model.addAttribute("sortDirection", sortDirection);
-            model.addAttribute("selectedStatus", status);
+            model.addAttribute("status", status);
+            
+            log.info("Successfully loaded {} loans", 
+                    loanPage.getContent() != null ? loanPage.getContent().size() : 0);
 
             return "loans/list";
 
         } catch (Exception e) {
             log.error("Error listing loans", e);
-            model.addAttribute("error", "Error loading loans: " + e.getMessage());
+            model.addAttribute("loanPage", createEmptyLoanPage());
+            model.addAttribute("error", "Nu s-au putut încărca împrumuturile. Verifică dacă serviciul de împrumuturi rulează.");
             return "loans/list";
         }
     }
@@ -65,6 +80,11 @@ public class LoanWebController {
 
         try {
             var user = userWebService.getUserByUsername(userDetails.getUsername());
+            if (user == null) {
+                model.addAttribute("error", "User not found: " + userDetails.getUsername());
+                return "loans/my-loans";
+            }
+            
             var loanPage = loanWebService.getLoansByUser(user.getId(), page, size);
 
             model.addAttribute("loanPage", loanPage);
@@ -74,26 +94,73 @@ public class LoanWebController {
 
         } catch (Exception e) {
             log.error("Error listing user loans", e);
-            model.addAttribute("error", "Error loading your loans: " + e.getMessage());
+            model.addAttribute("loanPage", createEmptyLoanPage());
+            model.addAttribute("error", "Failed to load your loans");
             return "loans/my-loans";
         }
     }
 
-    @GetMapping("/create")
-    @PreAuthorize("hasRole('LIBRARIAN')")
+    @GetMapping("/new")
+    @PreAuthorize("hasAnyRole('LIBRARIAN', 'ADMIN')")
     public String showCreateForm(Model model) {
+        log.info("Showing create loan form");
+        
         try {
-            model.addAttribute("loan", new LoanDTO());
-            model.addAttribute("books", bookWebService.getAllBooks());
-            return "loans/create";
+            // Încarcă datele necesare pentru dropdown-uri
+            BookPageDTO bookPage = bookWebService.getAllBooks(0, 50, null);
+            UserPageDTO userPage = userWebService.getAllUsers(0, 50);
+            
+            // Creează un loan nou pentru form
+            LoanDTO loanDTO = new LoanDTO();
+            
+            model.addAttribute("loanDTO", loanDTO);
+            model.addAttribute("books", bookPage != null ? bookPage.getContent() : Collections.emptyList());
+            model.addAttribute("users", userPage != null ? userPage.getContent() : Collections.emptyList());
+            
+            return "loans/form";
+            
         } catch (Exception e) {
-            log.error("Error loading create form", e);
-            model.addAttribute("error", "Error loading form data");
+            log.error("Error preparing loan form: {}", e.getMessage(), e);
+            model.addAttribute("loanDTO", new LoanDTO());
+            model.addAttribute("books", Collections.emptyList());
+            model.addAttribute("users", Collections.emptyList());
+            model.addAttribute("error", "Failed to load form data: " + e.getMessage());
+            return "loans/form";
+        }
+    }
+
+    @GetMapping("/{id}/edit")
+    @PreAuthorize("hasAnyRole('LIBRARIAN', 'ADMIN')")
+    public String showEditForm(@PathVariable Long id, Model model) {
+        log.info("Showing edit form for loan id: {}", id);
+        
+        try {
+            LoanDTO loan = loanWebService.getLoan(id);
+            
+            if (loan == null) {
+                model.addAttribute("error", "Loan not found");
+                return "redirect:/loans";
+            }
+            
+            // Încarcă datele necesare pentru dropdown-uri
+            BookPageDTO bookPage = bookWebService.getAllBooks(0, 50, null);
+            UserPageDTO userPage = userWebService.getAllUsers(0, 50);
+            
+            model.addAttribute("loanDTO", loan);
+            model.addAttribute("books", bookPage != null ? bookPage.getContent() : Collections.emptyList());
+            model.addAttribute("users", userPage != null ? userPage.getContent() : Collections.emptyList());
+            model.addAttribute("isEdit", true);
+            
+            return "loans/form";
+            
+        } catch (Exception e) {
+            log.error("Error loading loan for edit {}: {}", id, e.getMessage(), e);
+            model.addAttribute("error", "Failed to load loan: " + e.getMessage());
             return "redirect:/loans";
         }
     }
 
-    @PostMapping("/create")
+    @PostMapping("/new")
     @PreAuthorize("hasRole('LIBRARIAN')")
     public String createLoan(@ModelAttribute LoanDTO loanDTO,
                              RedirectAttributes redirectAttributes) {
@@ -128,5 +195,36 @@ public class LoanWebController {
             redirectAttributes.addFlashAttribute("errorMessage", "Error returning book: " + e.getMessage());
             return "redirect:/loans";
         }
+    }
+
+    @PostMapping("/update-overdue")
+    @PreAuthorize("hasRole('LIBRARIAN')")
+    public String updateOverdueLoans(RedirectAttributes redirectAttributes) {
+
+        log.info("Updating overdue loans");
+
+        try {
+            loanWebService.updateOverdueLoans();
+            redirectAttributes.addFlashAttribute("successMessage", "Overdue loans updated successfully!");
+            return "redirect:/loans";
+
+        } catch (Exception e) {
+            log.error("Error updating overdue loans", e);
+            redirectAttributes.addFlashAttribute("errorMessage", "Error updating overdue loans: " + e.getMessage());
+            return "redirect:/loans";
+        }
+    }
+
+    private LoanPageDTO createEmptyLoanPage() {
+        LoanPageDTO emptyPage = new LoanPageDTO();
+        emptyPage.setContent(Collections.emptyList());
+        emptyPage.setTotalElements(0);
+        emptyPage.setTotalPages(0);
+        emptyPage.setNumber(0);
+        emptyPage.setSize(10);
+        emptyPage.setFirst(true);
+        emptyPage.setLast(true);
+        emptyPage.setEmpty(true);
+        return emptyPage;
     }
 }

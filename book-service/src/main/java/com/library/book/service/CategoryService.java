@@ -4,7 +4,8 @@ import com.library.book.entity.Category;
 import com.library.book.exception.ResourceNotFoundException;
 import com.library.book.repository.CategoryRepository;
 import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -12,10 +13,10 @@ import java.util.List;
 
 @Service
 @RequiredArgsConstructor
-@Slf4j
 @Transactional
 public class CategoryService {
 
+    private static final Logger log = LoggerFactory.getLogger(CategoryService.class);
     private final CategoryRepository categoryRepository;
 
     public List<Category> findAll() {

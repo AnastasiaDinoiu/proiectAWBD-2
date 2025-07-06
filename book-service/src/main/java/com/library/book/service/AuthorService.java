@@ -4,7 +4,8 @@ import com.library.book.entity.Author;
 import com.library.book.exception.ResourceNotFoundException;
 import com.library.book.repository.AuthorRepository;
 import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
@@ -14,10 +15,10 @@ import java.util.List;
 
 @Service
 @RequiredArgsConstructor
-@Slf4j
 @Transactional
 public class AuthorService {
 
+    private static final Logger log = LoggerFactory.getLogger(AuthorService.class);
     private final AuthorRepository authorRepository;
 
     public List<Author> findAll() {

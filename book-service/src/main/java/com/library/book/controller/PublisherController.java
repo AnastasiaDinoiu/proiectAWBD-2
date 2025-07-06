@@ -1,15 +1,15 @@
 package com.library.book.controller;
 
-import com.library.entity.Publisher;
-import com.library.service.PublisherService;
+import com.library.book.entity.Publisher;
+import com.library.book.service.PublisherService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
 import org.springframework.security.access.prepost.PreAuthorize;
-import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
@@ -18,9 +18,9 @@ import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 @RestController
 @RequestMapping("/api/publishers")
 @RequiredArgsConstructor
-@Slf4j
 public class PublisherController {
 
+    private static final Logger log = LoggerFactory.getLogger(PublisherController.class);
     private final PublisherService publisherService;
 
     @GetMapping

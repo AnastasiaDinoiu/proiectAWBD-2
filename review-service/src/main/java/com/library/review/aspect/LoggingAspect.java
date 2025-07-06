@@ -1,6 +1,7 @@
 package com.library.review.aspect;
 
-import lombok.extern.slf4j.Slf4j;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.aspectj.lang.JoinPoint;
 import org.aspectj.lang.ProceedingJoinPoint;
 import org.aspectj.lang.annotation.*;
@@ -10,8 +11,8 @@ import java.util.Arrays;
 
 @Aspect
 @Component
-@Slf4j
 public class LoggingAspect {
+    private static final Logger log = LoggerFactory.getLogger(LoggingAspect.class);
 
     @Pointcut("@within(org.springframework.stereotype.Service)")
     public void serviceLayer() {}

@@ -1,5 +1,7 @@
 package com.library.book.controller;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
@@ -20,14 +22,13 @@ import com.library.book.service.AuthorService;
 
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
 
 @RestController
 @RequestMapping("/api/authors")
 @RequiredArgsConstructor
-@Slf4j
 public class AuthorController {
 
+    private static final Logger log = LoggerFactory.getLogger(AuthorController.class);
     private final AuthorService authorService;
 
     @GetMapping

@@ -435,6 +435,13 @@
         </div>
     </div>
 
+    <!-- Error Message -->
+    <div th:if="${error}" class="alert alert-danger alert-dismissible fade show" role="alert">
+        <i class="fas fa-exclamation-triangle me-2"></i>
+        <span th:text="${error}">Error message</span>
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+
     <!-- Form Card -->
     <div class="form-card">
         <div class="form-header">
@@ -444,6 +451,7 @@
             </h4>
         </div>
         
+        <!-- FIXED FORM ACTION -->
         <form th:action="@{${author.id != null ? '/authors/' + author.id + '/edit' : '/authors/new'}}"
               method="post" th:object="${author}" class="needs-validation" novalidate>
             
@@ -462,6 +470,7 @@
                                 <div class="input-group">
                                     <span class="input-group-text"><i class="fas fa-user"></i></span>
                                     <input type="text" class="form-control" id="firstName"
+                                           placeholder="Enter first name"
                                            th:field="*{firstName}" required
                                            th:classappend="${#fields.hasErrors('firstName')} ? 'is-invalid' : ''">
                                 </div>
@@ -476,6 +485,7 @@
                                 <div class="input-group">
                                     <span class="input-group-text"><i class="fas fa-user"></i></span>
                                     <input type="text" class="form-control" id="lastName"
+                                           placeholder="Enter last name"
                                            th:field="*{lastName}" required
                                            th:classappend="${#fields.hasErrors('lastName')} ? 'is-invalid' : ''">
                                 </div>
@@ -492,6 +502,7 @@
                                 <div class="input-group">
                                     <span class="input-group-text"><i class="fas fa-globe"></i></span>
                                     <input type="text" class="form-control" id="nationality"
+                                           placeholder="Enter nationality"
                                            th:field="*{nationality}"
                                            th:classappend="${#fields.hasErrors('nationality')} ? 'is-invalid' : ''">
                                 </div>

@@ -91,6 +91,11 @@ public class ReviewWebController {
 
         try {
             var user = userWebService.getUserByUsername(userDetails.getUsername());
+            if (user == null) {
+                model.addAttribute("error", "User not found: " + userDetails.getUsername());
+                return "reviews/my-reviews";
+            }
+            
             var reviewPage = reviewWebService.getReviewsByUser(user.getId(), page, size);
 
             model.addAttribute("reviewPage", reviewPage);
@@ -121,6 +126,11 @@ public class ReviewWebController {
         try {
             // Set user ID from authenticated user
             var user = userWebService.getUserByUsername(userDetails.getUsername());
+            if (user == null) {
+                redirectAttributes.addFlashAttribute("errorMessage", "User not found: " + userDetails.getUsername());
+                return "redirect:/books/" + reviewDTO.getBookId();
+            }
+            
             reviewDTO.setUserId(user.getId());
 
             reviewWebService.createReview(reviewDTO);
@@ -130,7 +140,7 @@ public class ReviewWebController {
 
         } catch (Exception e) {
             log.error("Error creating review", e);
-            redirectAttributes.addFlashAttribute("errorMessage", "Error adding review: " + e.getMessage());
+            redirectAttributes.addFlashAttribute("errorMessage", "Error creating review: " + e.getMessage());
             return "redirect:/books/" + reviewDTO.getBookId();
         }
     }

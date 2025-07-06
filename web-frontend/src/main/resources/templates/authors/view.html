@@ -701,6 +701,24 @@
                 </div>
             </div>
         </div>
+
+            <!-- Service Warning -->
+        <div th:if="${serviceWarning}" class="container-fluid mb-3">
+            <div class="alert alert-warning alert-dismissible fade show" role="alert">
+                <i class="fas fa-exclamation-triangle me-2"></i>
+                <span th:text="${serviceWarning}">Service warning</span>
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            </div>
+        </div>
+
+        <!-- Error Message -->
+        <div th:if="${error}" class="container-fluid mb-3">
+            <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                <i class="fas fa-exclamation-triangle me-2"></i>
+                <span th:text="${error}">Error message</span>
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            </div>
+        </div>
     </div>
 
     <div class="row">

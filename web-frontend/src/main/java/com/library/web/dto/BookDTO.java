@@ -1,20 +1,26 @@
 package com.library.web.dto;
 
 import lombok.Data;
+import lombok.NoArgsConstructor;
+import lombok.AllArgsConstructor;
+
 import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.util.List;
 
 @Data
+@NoArgsConstructor
+@AllArgsConstructor
 public class BookDTO {
     private Long id;
     private String isbn;
     private String title;
     private String description;
     private LocalDate publicationDate;
-    private Integer pages;
+    private int pages;
+    private int availableCopies;
     private BigDecimal price;
-    private Integer availableCopies;
-    private String categoryName;
-    private String publisherName;
-    private String authors;
+    private CategoryDTO category;
+    private PublisherDTO publisher;
+    private List<AuthorDTO> authors;
 }
