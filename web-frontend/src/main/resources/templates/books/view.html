@@ -1,0 +1,1052 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      xmlns:sec="http://www.w3.org/1999/xhtml"
+      layout:decorate="~{layout/main}">
+<head>
+    <title th:text="${book.title}">Book Details</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap');
+        
+        * {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+        }
+        
+        body {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            position: relative;
+        }
+        
+        body::before {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: 
+                radial-gradient(circle at 20% 80%, rgba(120, 119, 198, 0.3) 0%, transparent 50%),
+                radial-gradient(circle at 80% 20%, rgba(255, 119, 198, 0.15) 0%, transparent 50%),
+                radial-gradient(circle at 40% 40%, rgba(120, 200, 255, 0.1) 0%, transparent 50%);
+            pointer-events: none;
+            z-index: -1;
+        }
+        
+        /* Page Header */
+        .page-header {
+            background: linear-gradient(135deg, rgba(255,255,255,0.25) 0%, rgba(255,255,255,0.1) 100%);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(255,255,255,0.2);
+            color: white;
+            border-radius: 24px;
+            padding: 50px;
+            margin-bottom: 40px;
+            position: relative;
+            overflow: hidden;
+            box-shadow: 
+                0 25px 50px rgba(0,0,0,0.1),
+                inset 0 1px 0 rgba(255,255,255,0.2);
+            transform: translateY(0);
+            transition: all 0.3s ease;
+        }
+        
+        .page-header:hover {
+            transform: translateY(-5px);
+            box-shadow: 
+                0 35px 70px rgba(0,0,0,0.15),
+                inset 0 1px 0 rgba(255,255,255,0.3);
+        }
+        
+        .page-header::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: 
+                radial-gradient(circle at 30% 70%, rgba(255,255,255,0.1) 0%, transparent 50%),
+                linear-gradient(45deg, rgba(255,255,255,0.05) 0%, transparent 100%);
+            pointer-events: none;
+        }
+        
+        .book-title {
+            font-size: 3.5rem;
+            font-weight: 900;
+            margin-bottom: 15px;
+            text-shadow: 2px 4px 8px rgba(0,0,0,0.3);
+            position: relative;
+            z-index: 1;
+            background: linear-gradient(135deg, #ffffff 0%, #f0f8ff 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            line-height: 1.2;
+        }
+        
+        .book-subtitle {
+            font-size: 1.2rem;
+            opacity: 0.95;
+            margin-bottom: 0;
+            position: relative;
+            z-index: 1;
+            font-weight: 400;
+        }
+        
+        /* Content Cards */
+        .content-card {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(20px);
+            border-radius: 24px;
+            box-shadow: 
+                0 20px 40px rgba(0,0,0,0.1),
+                inset 0 1px 0 rgba(255,255,255,0.8);
+            border: 1px solid rgba(255,255,255,0.3);
+            margin-bottom: 30px;
+            overflow: hidden;
+            transform: translateY(0);
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        
+        .content-card:hover {
+            transform: translateY(-8px);
+            box-shadow: 
+                0 30px 60px rgba(0,0,0,0.15),
+                inset 0 1px 0 rgba(255,255,255,0.9);
+        }
+        
+        .card-header {
+            background: linear-gradient(135deg, rgba(102, 126, 234, 0.1) 0%, rgba(255,255,255,0.8) 100%);
+            border-bottom: 1px solid rgba(102, 126, 234, 0.15);
+            padding: 25px 30px;
+            position: relative;
+        }
+        
+        .card-header::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 2px;
+            background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
+        }
+        
+        .card-header h4 {
+            margin: 0;
+            color: #2d3748;
+            font-weight: 700;
+            font-size: 1.4rem;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        
+        .card-header i {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            font-size: 1.2rem;
+        }
+        
+        .card-body {
+            padding: 30px;
+        }
+        
+        /* Details Grid */
+        .details-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 25px;
+        }
+        
+        .detail-item {
+            background: linear-gradient(135deg, rgba(102, 126, 234, 0.03) 0%, rgba(255,255,255,0.5) 100%);
+            border-radius: 16px;
+            padding: 20px;
+            border: 1px solid rgba(102, 126, 234, 0.08);
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .detail-item::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 4px;
+            height: 100%;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            transform: scaleY(0);
+            transition: transform 0.3s ease;
+        }
+        
+        .detail-item:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 25px rgba(102, 126, 234, 0.15);
+            border-color: rgba(102, 126, 234, 0.2);
+        }
+        
+        .detail-item:hover::before {
+            transform: scaleY(1);
+        }
+        
+        .detail-label {
+            font-weight: 600;
+            color: #718096;
+            font-size: 0.85rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 8px;
+            display: block;
+        }
+        
+        .detail-value {
+            font-size: 1.2rem;
+            font-weight: 600;
+            color: #2d3748;
+        }
+        
+        /* Description Section */
+        .description-section {
+            padding: 30px;
+            background: linear-gradient(135deg, rgba(102, 126, 234, 0.05) 0%, rgba(255,255,255,0.8) 100%);
+            border-radius: 20px;
+            margin-top: 25px;
+            border: 1px solid rgba(102, 126, 234, 0.1);
+            position: relative;
+        }
+        
+        .description-title {
+            font-size: 1.3rem;
+            font-weight: 700;
+            color: #2d3748;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        
+        .description-content {
+            line-height: 1.8;
+            color: #4a5568;
+            font-size: 1.1rem;
+            white-space: pre-wrap;
+            font-weight: 400;
+        }
+        
+        /* Authors Section */
+        .authors-section {
+            margin-top: 30px;
+        }
+        
+        .authors-title {
+            font-size: 1.3rem;
+            font-weight: 700;
+            color: #2d3748;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        
+        .authors-list {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 12px;
+        }
+        
+        .author-item {
+            background: linear-gradient(135deg, rgba(102, 126, 234, 0.1) 0%, rgba(255,255,255,0.9) 100%);
+            padding: 12px 20px;
+            border-radius: 50px;
+            font-weight: 600;
+            font-size: 1rem;
+            color: #4a5568;
+            border: 1px solid rgba(102, 126, 234, 0.2);
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.1);
+        }
+        
+        .author-item:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(102, 126, 234, 0.2);
+            background: linear-gradient(135deg, rgba(102, 126, 234, 0.15) 0%, rgba(255,255,255,0.95) 100%);
+        }
+        
+        .author-item i {
+            color: #667eea;
+            font-size: 0.9rem;
+        }
+        
+        /* Availability Card */
+        .availability-card {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(20px);
+            border-radius: 24px;
+            box-shadow: 
+                0 20px 40px rgba(0,0,0,0.1),
+                inset 0 1px 0 rgba(255,255,255,0.8);
+            border: 1px solid rgba(255,255,255,0.3);
+            margin-bottom: 25px;
+            position: sticky;
+            top: 20px;
+            overflow: hidden;
+            transform: translateY(0);
+            transition: all 0.3s ease;
+        }
+        
+        .availability-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 
+                0 30px 60px rgba(0,0,0,0.15),
+                inset 0 1px 0 rgba(255,255,255,0.9);
+        }
+        
+        .availability-header {
+            padding: 25px 30px;
+            border-bottom: 1px solid rgba(102, 126, 234, 0.15);
+            background: linear-gradient(135deg, rgba(102, 126, 234, 0.1) 0%, rgba(255,255,255,0.8) 100%);
+            position: relative;
+        }
+        
+        .availability-header::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 2px;
+            background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
+        }
+        
+        .availability-title {
+            margin: 0;
+            color: #2d3748;
+            font-weight: 700;
+            font-size: 1.4rem;
+        }
+        
+        .availability-body {
+            padding: 30px;
+        }
+        
+        .availability-badge {
+            font-size: 1.1rem;
+            padding: 12px 20px;
+            border-radius: 50px;
+            font-weight: 700;
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 25px;
+            color: white;
+            text-shadow: 0 1px 2px rgba(0,0,0,0.2);
+            box-shadow: 0 8px 20px rgba(0,0,0,0.15);
+            transition: all 0.3s ease;
+        }
+        
+        .availability-badge:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 12px 30px rgba(0,0,0,0.2);
+        }
+        
+        .available {
+            background: linear-gradient(135deg, #48bb78 0%, #38a169 100%);
+        }
+        
+        .unavailable {
+            background: linear-gradient(135deg, #f56565 0%, #e53e3e 100%);
+        }
+        
+        /* Buttons Container */
+        .buttons-container {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 12px;
+            align-items: center;
+        }
+        
+        .delete-form {
+            margin: 0;
+            display: flex;
+        }
+        
+        /* Buttons */
+        .btn-custom {
+            border: none;
+            border-radius: 16px;
+            padding: 12px 20px;
+            font-weight: 700;
+            font-size: 0.9rem;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            margin-bottom: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            text-decoration: none;
+            position: relative;
+            overflow: hidden;
+            flex: 1;
+            min-width: fit-content;
+            white-space: nowrap;
+        }
+        
+        .btn-custom::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
+            transition: left 0.5s;
+        }
+        
+        .btn-custom:hover::before {
+            left: 100%;
+        }
+        
+        .btn-borrow {
+            background: linear-gradient(135deg, #4299e1 0%, #3182ce 100%);
+            color: white;
+            box-shadow: 0 10px 25px rgba(66, 153, 225, 0.3);
+        }
+        
+        .btn-borrow:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 15px 35px rgba(66, 153, 225, 0.4);
+            color: white;
+        }
+        
+        .btn-edit {
+            background: linear-gradient(135deg, #ecc94b 0%, #d69e2e 100%);
+            color: white;
+            box-shadow: 0 10px 25px rgba(236, 201, 75, 0.3);
+        }
+        
+        .btn-edit:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 15px 35px rgba(236, 201, 75, 0.4);
+            color: white;
+        }
+        
+        .btn-delete {
+            background: linear-gradient(135deg, #f56565 0%, #e53e3e 100%);
+            color: white;
+            box-shadow: 0 10px 25px rgba(245, 101, 101, 0.3);
+        }
+        
+        .btn-delete:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 15px 35px rgba(245, 101, 101, 0.4);
+            color: white;
+        }
+        
+        .btn-back {
+            background: linear-gradient(135deg, #a0aec0 0%, #718096 100%);
+            color: white;
+            box-shadow: 0 10px 25px rgba(160, 174, 192, 0.3);
+        }
+        
+        .btn-back:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 15px 35px rgba(160, 174, 192, 0.4);
+            color: white;
+        }
+        
+        /* Reviews Section */
+        .reviews-card {
+            margin-top: 30px;
+        }
+        
+        .review-item {
+            background: linear-gradient(135deg, rgba(102, 126, 234, 0.05) 0%, rgba(255,255,255,0.9) 100%);
+            border-radius: 20px;
+            padding: 25px;
+            margin-bottom: 20px;
+            box-shadow: 0 8px 20px rgba(102, 126, 234, 0.1);
+            border: 1px solid rgba(102, 126, 234, 0.1);
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .review-item::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 4px;
+            height: 100%;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            transform: scaleY(0);
+            transition: transform 0.3s ease;
+        }
+        
+        .review-item:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 15px 30px rgba(102, 126, 234, 0.15);
+        }
+        
+        .review-item:hover::before {
+            transform: scaleY(1);
+        }
+        
+        .review-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+        
+        .reviewer-name {
+            font-weight: 700;
+            color: #2d3748;
+            font-size: 1.1rem;
+        }
+        
+        .rating-stars {
+            display: flex;
+            gap: 4px;
+        }
+        
+        .fas.fa-star {
+            color: #f6e05e;
+            filter: drop-shadow(0 1px 2px rgba(0,0,0,0.1));
+        }
+        
+        .far.fa-star {
+            color: #e2e8f0;
+        }
+        
+        .review-content {
+            color: #4a5568;
+            line-height: 1.8;
+            margin-bottom: 15px;
+            font-size: 1.05rem;
+        }
+        
+        .review-date {
+            color: #a0aec0;
+            font-size: 0.9rem;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            font-weight: 500;
+        }
+        
+        .empty-reviews {
+            text-align: center;
+            padding: 50px 20px;
+            color: #a0aec0;
+        }
+        
+        .empty-reviews i {
+            font-size: 4rem;
+            margin-bottom: 20px;
+            opacity: 0.6;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        
+        /* Book Meta */
+        .book-meta {
+            display: flex;
+            gap: 25px;
+            flex-wrap: wrap;
+            margin-top: 20px;
+        }
+        
+        .book-meta-item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            color: rgba(255,255,255,0.9);
+            font-size: 1rem;
+            font-weight: 500;
+            background: rgba(255,255,255,0.1);
+            padding: 8px 16px;
+            border-radius: 50px;
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255,255,255,0.2);
+            transition: all 0.3s ease;
+        }
+        
+        .book-meta-item:hover {
+            background: rgba(255,255,255,0.2);
+            transform: translateY(-2px);
+        }
+        
+        .book-meta-item i {
+            font-size: 0.9rem;
+        }
+        
+        /* Price Tag */
+        .price-tag {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            font-weight: 800;
+            padding: 15px 25px;
+            border-radius: 50px;
+            margin-bottom: 30px;
+            font-size: 1.4rem;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            box-shadow: 0 15px 35px rgba(102, 126, 234, 0.4);
+            text-shadow: 0 1px 2px rgba(0,0,0,0.2);
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .price-tag::before {
+            content: '';
+            position: absolute;
+            top: -2px;
+            left: -2px;
+            right: -2px;
+            bottom: -2px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border-radius: 50px;
+            z-index: -1;
+            filter: blur(8px);
+            opacity: 0.6;
+        }
+        
+        .price-tag:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 20px 45px rgba(102, 126, 234, 0.5);
+        }
+        
+        /* Review Form Styles */
+        .review-form-container {
+            background: linear-gradient(135deg, rgba(102, 126, 234, 0.08) 0%, rgba(255,255,255,0.9) 100%);
+            border-radius: 20px;
+            padding: 30px;
+            margin-bottom: 30px;
+            border: 1px solid rgba(102, 126, 234, 0.15);
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .review-form-container::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 3px;
+            background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
+        }
+        
+        .review-form-title {
+            font-size: 1.3rem;
+            font-weight: 700;
+            color: #2d3748;
+            margin-bottom: 25px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        
+        .review-form-title i {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        
+        .comment-input-container {
+            margin-bottom: 25px;
+        }
+        
+        .comment-label {
+            display: block;
+            font-weight: 600;
+            color: #4a5568;
+            margin-bottom: 12px;
+            font-size: 1rem;
+        }
+        
+        .comment-input-container textarea {
+            width: 100%;
+            border: 2px solid rgba(102, 126, 234, 0.15);
+            border-radius: 16px;
+            padding: 16px 20px;
+            font-size: 1rem;
+            font-family: inherit;
+            background: rgba(255, 255, 255, 0.8);
+            backdrop-filter: blur(10px);
+            transition: all 0.3s ease;
+            resize: vertical;
+            min-height: 100px;
+        }
+        
+        .comment-input-container textarea:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+            background: rgba(255, 255, 255, 0.95);
+        }
+        
+        .comment-input-container textarea::placeholder {
+            color: #a0aec0;
+            font-style: italic;
+        }
+        
+        .btn-submit-review {
+            background: linear-gradient(135deg, #48bb78 0%, #38a169 100%);
+            color: white;
+            box-shadow: 0 10px 25px rgba(72, 187, 120, 0.3);
+            border: none;
+            padding: 14px 28px;
+            font-size: 1rem;
+            font-weight: 700;
+            border-radius: 16px;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .btn-submit-review::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
+            transition: left 0.5s;
+        }
+        
+        .btn-submit-review:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 15px 35px rgba(72, 187, 120, 0.4);
+            color: white;
+        }
+        
+        .btn-submit-review:hover::before {
+            left: 100%;
+        }
+        
+        .reviews-list {
+            border-top: 1px solid rgba(102, 126, 234, 0.1);
+            padding-top: 30px;
+        }
+        
+        /* Responsive Design */
+        @media (max-width: 768px) {
+            .page-header {
+                padding: 30px;
+            }
+            
+            .book-title {
+                font-size: 2.5rem;
+            }
+            
+            .book-subtitle {
+                font-size: 1.1rem;
+            }
+            
+            .details-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .book-meta {
+                gap: 15px;
+            }
+            
+            .card-body, .availability-body {
+                padding: 25px;
+            }
+            
+            .buttons-container {
+                flex-direction: column;
+                gap: 10px;
+            }
+            
+            .btn-custom {
+                flex: none;
+                width: 100%;
+            }
+            
+            .review-form-container {
+                padding: 25px;
+            }
+        }
+        
+        /* Scroll animations */
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        
+        .content-card, .availability-card {
+            animation: fadeInUp 0.6s ease forwards;
+        }
+        
+        .content-card:nth-child(2) {
+            animation-delay: 0.1s;
+        }
+        
+        .content-card:nth-child(3) {
+            animation-delay: 0.2s;
+        }
+    </style>
+    <script>
+        // Simple form validation and interaction
+        document.addEventListener('DOMContentLoaded', function() {
+            const commentForm = document.querySelector('.review-form');
+            const commentTextarea = document.getElementById('comment');
+            
+            // Add character counter or other enhancements if needed
+            commentTextarea.addEventListener('input', function() {
+                // Optional: Add character counting or validation feedback
+                if (this.value.length > 10) {
+                    this.style.borderColor = '#48bb78';
+                } else {
+                    this.style.borderColor = 'rgba(102, 126, 234, 0.15)';
+                }
+            });
+            
+            // Form submission handler
+            commentForm.addEventListener('submit', function(e) {
+                e.preventDefault();
+                // Here you would typically send the comment to your backend
+                console.log('Comment submitted:', commentTextarea.value);
+                
+                // Optional: Show success message or reset form
+                alert('Comment submitted successfully!');
+                commentTextarea.value = '';
+                commentTextarea.style.borderColor = 'rgba(102, 126, 234, 0.15)';
+            });
+        });
+    </script>
+</head>
+<body>
+<div layout:fragment="content">
+    <!-- Page Header -->
+    <div class="page-header">
+        <h1 class="book-title" th:text="${book.title}">Book Title</h1>
+        <div class="book-meta">
+            <div class="book-meta-item">
+                <i class="fas fa-calendar-alt"></i>
+                <span th:text="${#temporals.format(book.publicationDate, 'MMMM d, yyyy')}">Publication Date</span>
+            </div>
+            <div class="book-meta-item" th:if="${book.publisher}">
+                <i class="fas fa-building"></i>
+                <span th:text="${book.publisher.name}">Publisher</span>
+            </div>
+            <div class="book-meta-item" th:if="${book.category}">
+                <i class="fas fa-tag"></i>
+                <span th:text="${book.category.name}">Category</span>
+            </div>
+            <div class="book-meta-item">
+                <i class="fas fa-file-alt"></i>
+                <span th:text="${book.pages + ' pages'}">Pages</span>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <!-- Main Content Column -->
+        <div class="col-md-8">
+            <!-- Book Details Card -->
+            <div class="content-card">
+                <div class="card-header">
+                    <h4><i class="fas fa-book me-2"></i> Book Details</h4>
+                </div>
+                <div class="card-body">
+                    <div class="details-grid">
+                        <div class="detail-item">
+                            <span class="detail-label">ISBN</span>
+                            <div class="detail-value" th:text="${book.isbn}">ISBN</div>
+                        </div>
+                        <div class="detail-item" th:if="${book.category}">
+                            <span class="detail-label">Category</span>
+                            <div class="detail-value" th:text="${book.category?.name ?: 'N/A'}">Category</div>
+                        </div>
+                        <div class="detail-item" th:if="${book.publisher}">
+                            <span class="detail-label">Publisher</span>
+                            <div class="detail-value" th:text="${book.publisher?.name ?: 'N/A'}">Publisher</div>
+                        </div>
+                        <div class="detail-item">
+                            <span class="detail-label">Publication Date</span>
+                            <div class="detail-value" th:text="${#temporals.format(book.publicationDate, 'MMMM d, yyyy')}">Date</div>
+                        </div>
+                        <div class="detail-item">
+                            <span class="detail-label">Pages</span>
+                            <div class="detail-value" th:text="${book.pages}">0</div>
+                        </div>
+                        <div class="detail-item">
+                            <span class="detail-label">Available Copies</span>
+                            <div class="detail-value" th:text="${book.availableCopies}">0</div>
+                        </div>
+                    </div>
+
+                    <!-- Description Section -->
+                    <div class="description-section" th:if="${book.description}">
+                        <h3 class="description-title">
+                            <i class="fas fa-align-left"></i> Description
+                        </h3>
+                        <div class="description-content" th:text="${book.description}">Book description</div>
+                    </div>
+
+                    <!-- Authors Section -->
+                    <div class="authors-section" th:if="${!book.authors.isEmpty()}">
+                        <h3 class="authors-title">
+                            <i class="fas fa-user-edit"></i> Authors
+                        </h3>
+                        <div class="authors-list">
+                            <div th:each="author : ${book.authors}" class="author-item">
+                                <i class="fas fa-feather-alt"></i>
+                                <span th:text="${author.firstName + ' ' + author.lastName}">Author Name</span>
+                            </div>
+                        </div>
+                    </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Reviews Section -->
+            <div class="content-card reviews-card">
+                <div class="card-header reviews-header">
+                    <h4><i class="fas fa-comments me-2"></i> Reviews</h4>
+                </div>
+                <div class="card-body">
+                    <!-- Add Comment Form -->
+                    <div class="review-form-container">
+                        <h5 class="review-form-title">
+                            <i class="fas fa-comment"></i> Add Your Comment
+                        </h5>
+                        <form class="review-form" th:action="@{/reviews/create}" method="post" th:object="${newReview}">
+                            <input type="hidden" th:field="*{bookId}" th:value="${book.id}">
+
+                            <div class="rating-input-container">
+                                <label for="rating" class="rating-label">Your Rating:</label>
+                                <select id="rating" th:field="*{rating}" class="rating-select" required>
+                                    <option value="">Select Rating</option>
+                                    <option value="1">1 Star</option>
+                                    <option value="2">2 Stars</option>
+                                    <option value="3">3 Stars</option>
+                                    <option value="4">4 Stars</option>
+                                    <option value="5">5 Stars</option>
+                                </select>
+                            </div>
+
+                            <div class="comment-input-container">
+                                <label for="comment" class="comment-label">Your Comment:</label>
+                                <textarea id="comment" th:field="*{comment}"
+                                          placeholder="Share your thoughts about this book..."
+                                          rows="4"
+                                          required></textarea>
+                            </div>
+
+                            <button type="submit" class="btn btn-custom btn-submit-review">
+                                <i class="fas fa-paper-plane"></i> Submit Review
+                            </button>
+                        </form>
+                    </div>
+                    
+                    <!-- Reviews List -->
+                    <div class="reviews-list">
+                        <div th:if="${book.reviews.isEmpty()}" class="empty-reviews">
+                            <i class="far fa-comment-dots"></i>
+                            <h5>No reviews yet</h5>
+                            <p class="text-muted">Be the first to review this book!</p>
+                        </div>
+                        <div th:unless="${book.reviews.isEmpty()}">
+                        <div th:each="review : ${book.reviews}" class="review-item">
+                            <div class="review-header">
+                                <div class="reviewer-name" th:text="${review.user.username}">Username</div>
+                                <div class="rating-stars">
+                                    <span th:each="i : ${#numbers.sequence(1, 5)}">
+                                        <i th:classappend="${i <= review.rating} ? 'fas' : 'far'"
+                                           class="fa-star"></i>
+                                    </span>
+                                </div>
+                            </div>
+                            <div class="review-content" th:text="${review.comment}">Review comment</div>
+                            <div class="review-date">
+                                <i class="far fa-clock"></i>
+                                <span th:text="${#temporals.format(review.reviewDate, 'MMM d, yyyy HH:mm')}">Date</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Sidebar Column -->
+        <div class="col-md-4">
+            <div class="availability-card">
+                <div class="availability-header">
+                    <h5 class="availability-title">Book Actions</h5>
+                </div>
+                <div class="availability-body">
+                    <div class="price-tag">
+                        <i class="fas fa-tag"></i>
+                        <span th:text="'$' + ${#numbers.formatDecimal(book.price, 1, 2)}">$0.00</span>
+                    </div>
+                    
+                    <div class="availability-badge"
+                         th:classappend="${book.availableCopies > 0} ? 'available' : 'unavailable'">
+                        <i th:class="${book.availableCopies > 0} ? 'fas fa-check-circle' : 'fas fa-times-circle'"></i>
+                        <span th:text="${book.availableCopies > 0} ? 'Available (' + ${book.availableCopies} + ' copies)' : 'Not Available'">
+                            Status
+                        </span>
+                    </div>
+
+                    <div class="buttons-container">
+                        <a th:if="${book.availableCopies > 0}"
+                           href="#" class="btn btn-custom btn-borrow">
+                            <i class="fas fa-book-reader"></i> Borrow This Book
+                        </a>
+
+                        <a th:href="@{/books/{id}/edit(id=${book.id})}"
+                           class="btn btn-custom btn-edit"
+                           sec:authorize="hasRole('LIBRARIAN')">
+                            <i class="fas fa-edit"></i> Edit Book
+                        </a>
+
+                        <form th:action="@{/books/{id}/delete(id=${book.id})}"
+                              method="post"
+                              sec:authorize="hasRole('LIBRARIAN')"
+                              onsubmit="return confirm('Are you sure you want to delete this book?');"
+                              class="delete-form">
+                            <button type="submit" class="btn btn-custom btn-delete">
+                                <i class="fas fa-trash"></i> Delete Book
+                            </button>
+                        </form>
+
+                        <a href="/books" th:href="@{/books}" class="btn btn-custom btn-back">
+                            <i class="fas fa-arrow-left"></i> Back to List
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+</body>
+</html>

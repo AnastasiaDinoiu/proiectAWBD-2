@@ -1,0 +1,908 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layout/main}">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Books - Library Management System</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <th:block layout:fragment="styles">
+    <style>
+      .page-header {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        border-radius: 25px;
+        padding: 50px;
+        margin-bottom: 40px;
+        position: relative;
+        overflow: hidden;
+        box-shadow: 0 20px 60px rgba(102, 126, 234, 0.3);
+      }
+
+      .page-header::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><defs><pattern id="books" width="25" height="25" patternUnits="userSpaceOnUse"><rect x="8" y="8" width="4" height="12" rx="1" fill="rgba(255,255,255,0.1)"/><rect x="14" y="6" width="4" height="14" rx="1" fill="rgba(255,255,255,0.08)"/></pattern></defs><rect width="100" height="100" fill="url(%23books)"/></svg>');
+        opacity: 0.4;
+      }
+
+      .page-header .content {
+        position: relative;
+        z-index: 1;
+      }
+
+      .page-title {
+        font-size: 3.5rem;
+        font-weight: 800;
+        margin-bottom: 15px;
+        text-shadow: 2px 2px 8px rgba(0,0,0,0.3);
+        letter-spacing: -1px;
+      }
+
+      .page-subtitle {
+        font-size: 1.3rem;
+        opacity: 0.95;
+        margin-bottom: 0;
+        font-weight: 400;
+      }
+
+      .add-btn {
+        background: rgba(255,255,255,0.15);
+        border: 2px solid rgba(255,255,255,0.25);
+        color: white;
+        padding: 15px 35px;
+        border-radius: 50px;
+        font-weight: 700;
+        text-decoration: none;
+        transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        backdrop-filter: blur(20px);
+        box-shadow: 0 8px 25px rgba(0,0,0,0.1);
+      }
+
+      .add-btn:hover {
+        background: rgba(255,255,255,0.25);
+        border-color: rgba(255,255,255,0.4);
+        color: white;
+        text-decoration: none;
+        transform: translateY(-3px) scale(1.05);
+        box-shadow: 0 15px 35px rgba(0,0,0,0.2);
+      }
+
+      .col-auto {
+        margin-top: 10px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+
+      .search-filters-card {
+        background: white;
+        border-radius: 25px;
+        padding: 35px;
+        box-shadow: 0 15px 45px rgba(0,0,0,0.08);
+        border: 1px solid rgba(102, 126, 234, 0.08);
+        margin-bottom: 45px;
+        position: relative;
+        overflow: hidden;
+      }
+
+      .search-filters-card::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 3px;
+        background: linear-gradient(90deg, #667eea 0%, #764ba2 50%, #667eea 100%);
+      }
+
+      .search-bar {
+        background: linear-gradient(135deg, #f8f9ff 0%, #ffffff 100%);
+        border-radius: 50px;
+        padding: 15px 20px;
+        border: 2px solid rgba(102, 126, 234, 0.1);
+        margin-bottom: 25px;
+        box-shadow: inset 0 2px 10px rgba(102, 126, 234, 0.05);
+        transition: all 0.3s ease;
+      }
+
+      .search-bar:focus-within {
+        border-color: rgba(102, 126, 234, 0.3);
+        box-shadow: inset 0 2px 10px rgba(102, 126, 234, 0.1), 0 0 0 4px rgba(102, 126, 234, 0.1);
+      }
+
+      .search-form {
+        display: flex;
+        align-items: center;
+        width: 100%;
+        gap: 20px;
+      }
+
+      .search-input {
+        border: none;
+        background: transparent;
+        padding: 10px 0;
+        font-size: 1rem;
+        outline: none;
+        flex: 1;
+        min-width: 0;
+        font-weight: 500;
+      }
+
+      .search-input::placeholder {
+        color: #a0a8bd;
+        font-weight: 400;
+      }
+
+      .search-btn {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        border: none;
+        border-radius: 30px;
+        padding: 12px 25px;
+        color: white;
+        font-weight: 700;
+        transition: all 0.4s ease;
+        font-size: 0.9rem;
+        white-space: nowrap;
+        flex-shrink: 0;
+        box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
+      }
+
+      .search-btn:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 25px rgba(102, 126, 234, 0.4);
+      }
+
+      .filters-container {
+        margin-top: 20px;
+        display: flex;
+        flex-wrap: wrap;
+        gap: 30px;
+        align-items: center;
+      }
+
+      .filter-group {
+        display: flex;
+        align-items: center;
+        gap: 15px;
+      }
+
+      .filter-label {
+        font-weight: 700;
+        color: #495057;
+        font-size: 0.9rem;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        white-space: nowrap;
+        margin-bottom: 0;
+      }
+
+      .filter-select {
+        border: 2px solid rgba(102, 126, 234, 0.15);
+        border-radius: 15px;
+        padding: 12px 18px;
+        background: white;
+        font-size: 0.95rem;
+        font-weight: 500;
+        transition: all 0.3s ease;
+        box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+        min-width: 180px;
+      }
+
+      .filter-select:focus {
+        border-color: #667eea;
+        box-shadow: 0 0 0 4px rgba(102, 126, 234, 0.1);
+        outline: none;
+      }
+
+      .books-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(380px, 1fr));
+        gap: 35px;
+        margin-bottom: 50px;
+      }
+
+      .book-card {
+        background: white;
+        border-radius: 25px;
+        padding: 30px;
+        box-shadow: 0 10px 35px rgba(0,0,0,0.08);
+        border: 1px solid rgba(102, 126, 234, 0.08);
+        transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        position: relative;
+        overflow: hidden;
+      }
+
+      .book-card::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 5px;
+        background: linear-gradient(90deg, #667eea 0%, #764ba2 50%, #51cf66 100%);
+        transform: scaleX(0);
+        transform-origin: left;
+        transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+      }
+
+      .book-card:hover {
+        transform: translateY(-4px);
+        box-shadow: 0 15px 40px rgba(0,0,0,0.12);
+      }
+
+      .book-card:hover::before {
+        transform: scaleX(1);
+      }
+
+      .book-header {
+        display: flex;
+        align-items: flex-start;
+        gap: 25px;
+        margin-bottom: 25px;
+      }
+
+      .book-icon {
+        width: 70px;
+        height: 90px;
+        border-radius: 12px;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.8rem;
+        color: white;
+        font-weight: 700;
+        box-shadow: 0 10px 30px rgba(102, 126, 234, 0.4);
+        flex-shrink: 0;
+        position: relative;
+        overflow: hidden;
+      }
+
+      .book-icon::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: linear-gradient(45deg, rgba(255,255,255,0.1) 0%, transparent 100%);
+      }
+
+      .book-main-info {
+        flex: 1;
+        min-width: 0;
+      }
+
+      .book-title {
+        font-size: 1.4rem;
+        font-weight: 800;
+        color: #2c3e50;
+        margin-bottom: 8px;
+        text-decoration: none;
+        display: block;
+        line-height: 1.3;
+        transition: all 0.3s ease;
+      }
+
+      .book-title:hover {
+        color: #667eea;
+        text-decoration: none;
+        transform: translateX(3px);
+      }
+
+      .book-isbn {
+        font-size: 0.85rem;
+        color: #6c757d;
+        font-family: 'Courier New', monospace;
+        background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+        padding: 6px 12px;
+        border-radius: 8px;
+        display: inline-block;
+        font-weight: 600;
+      }
+
+      .price-badge {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        padding: 10px 18px;
+        border-radius: 20px;
+        font-weight: 800;
+        font-size: 1.1rem;
+        box-shadow: 0 6px 20px rgba(102, 126, 234, 0.3);
+        position: relative;
+        overflow: hidden;
+      }
+
+      .price-badge::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: -100%;
+        width: 100%;
+        height: 100%;
+        background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
+        transition: left 0.5s ease;
+      }
+
+      .book-card:hover .price-badge::before {
+        left: 100%;
+      }
+
+      .book-info {
+        margin-bottom: 25px;
+      }
+
+      .info-row {
+        display: flex;
+        align-items: center;
+        margin-bottom: 12px;
+        color: #6c757d;
+        font-size: 0.95rem;
+        font-weight: 500;
+        transition: all 0.2s ease;
+      }
+
+      .info-row:hover {
+        color: #495057;
+        transform: translateX(3px);
+      }
+
+      .info-row i {
+        width: 22px;
+        color: #667eea;
+        margin-right: 12px;
+        flex-shrink: 0;
+        font-size: 1rem;
+      }
+
+      .book-badges {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 10px;
+        margin-bottom: 25px;
+      }
+
+      .category-badge {
+        background: linear-gradient(135deg, #51cf66 0%, #40c057 100%);
+        color: white;
+        padding: 6px 14px;
+        border-radius: 15px;
+        font-size: 0.8rem;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        box-shadow: 0 4px 12px rgba(81, 207, 102, 0.3);
+      }
+
+      .availability-badge {
+        color: white;
+        padding: 6px 14px;
+        border-radius: 15px;
+        font-size: 0.8rem;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        position: relative;
+        overflow: hidden;
+      }
+
+      .available {
+        background: linear-gradient(135deg, #51cf66 0%, #40c057 100%);
+        box-shadow: 0 4px 12px rgba(81, 207, 102, 0.3);
+      }
+
+      .unavailable {
+        background: linear-gradient(135deg, #dc3545 0%, #c82333 100%);
+        box-shadow: 0 4px 12px rgba(220, 53, 69, 0.3);
+      }
+
+      .availability-badge::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: linear-gradient(45deg, rgba(255,255,255,0.1) 0%, transparent 100%);
+      }
+
+      .book-actions {
+        display: flex;
+        gap: 10px;
+        padding-top: 25px;
+        border-top: 2px solid rgba(102, 126, 234, 0.08);
+      }
+
+      .action-btn {
+        border: none;
+        border-radius: 12px;
+        padding: 12px 16px;
+        transition: all 0.2s ease;
+        font-size: 0.9rem;
+        font-weight: 600;
+        flex: 1;
+        text-decoration: none;
+        text-align: center;
+        position: relative;
+        overflow: hidden;
+      }
+
+      .action-btn::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: -100%;
+        width: 100%;
+        height: 100%;
+        background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
+        transition: left 0.3s ease;
+      }
+
+      .action-btn:hover {
+        transform: translateY(-2px);
+        text-decoration: none;
+      }
+
+      .action-btn:hover::before {
+        left: 100%;
+      }
+
+      .btn-view {
+        background: linear-gradient(135deg, #17a2b8 0%, #138496 100%);
+        color: white;
+        box-shadow: 0 4px 15px rgba(23, 162, 184, 0.3);
+      }
+
+      .btn-view:hover {
+        box-shadow: 0 8px 25px rgba(23, 162, 184, 0.4);
+        color: white;
+      }
+
+      .btn-edit {
+        background: linear-gradient(135deg, #ffc107 0%, #e0a800 100%);
+        color: white;
+        box-shadow: 0 4px 15px rgba(255, 193, 7, 0.3);
+      }
+
+      .btn-edit:hover {
+        box-shadow: 0 8px 25px rgba(255, 193, 7, 0.4);
+        color: white;
+      }
+
+      .btn-delete {
+        background: linear-gradient(135deg, #dc3545 0%, #c82333 100%);
+        color: white;
+        box-shadow: 0 4px 15px rgba(220, 53, 69, 0.3);
+      }
+
+      .btn-delete:hover {
+        box-shadow: 0 8px 25px rgba(220, 53, 69, 0.4);
+        color: white;
+      }
+
+      /* FIXED PAGINATION STYLING - NO LISTS */
+      .pagination-card {
+        background: white;
+        border-radius: 20px;
+        padding: 25px;
+        box-shadow: 0 15px 45px rgba(0,0,0,0.08);
+        border: 1px solid rgba(102, 126, 234, 0.08);
+        display: flex;
+        justify-content: center;
+        align-items: center;
+      }
+
+      .pagination {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        margin: 0;
+        padding: 0;
+      }
+
+      .page-item {
+        display: flex;
+        align-items: center;
+        margin: 0;
+        padding: 0;
+      }
+
+      .pagination .page-link {
+        border: none;
+        border-radius: 12px;
+        margin: 0 6px;
+        padding: 14px 18px;
+        color: #667eea;
+        font-weight: 600;
+        transition: all 0.3s ease;
+        box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+        text-decoration: none;
+        background: white;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+      }
+
+      .pagination .page-item.active .page-link {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        border-color: transparent;
+        box-shadow: 0 6px 20px rgba(102, 126, 234, 0.4);
+        color: white;
+      }
+
+      .pagination .page-link:hover {
+        background: rgba(102, 126, 234, 0.1);
+        color: #5a67d8;
+        transform: translateY(-2px);
+        box-shadow: 0 6px 20px rgba(0,0,0,0.1);
+        text-decoration: none;
+      }
+
+      .pagination .page-item.active .page-link:hover {
+        background: linear-gradient(135deg, #5a67d8 0%, #6b46c1 100%);
+        color: white;
+        transform: translateY(-3px);
+        box-shadow: 0 10px 30px rgba(102, 126, 234, 0.5);
+      }
+
+      .pagination .page-item.disabled .page-link {
+        color: #6c757d;
+        background: #f8f9fa;
+        box-shadow: none;
+        cursor: not-allowed;
+        pointer-events: none;
+      }
+
+      .pagination .page-item.disabled .page-link:hover {
+        transform: none;
+        box-shadow: none;
+        background: #f8f9fa;
+        color: #6c757d;
+      }
+
+      .empty-state {
+        text-align: center;
+        padding: 100px 30px;
+        color: #6c757d;
+        background: white;
+        border-radius: 25px;
+        box-shadow: 0 15px 45px rgba(0,0,0,0.08);
+      }
+
+      .empty-state i {
+        font-size: 6rem;
+        margin-bottom: 40px;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+      }
+
+      .empty-state h3 {
+        font-size: 2.5rem;
+        font-weight: 800;
+        margin-bottom: 20px;
+        color: #2c3e50;
+      }
+
+      .empty-state p {
+        font-size: 1.2rem;
+        margin-bottom: 40px;
+        max-width: 500px;
+        margin-left: auto;
+        margin-right: auto;
+      }
+
+      .empty-btn {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        border: none;
+        border-radius: 50px;
+        padding: 18px 40px;
+        color: white;
+        font-weight: 700;
+        text-decoration: none;
+        transition: all 0.4s ease;
+        display: inline-block;
+        box-shadow: 0 8px 25px rgba(102, 126, 234, 0.3);
+      }
+
+      .empty-btn:hover {
+        transform: translateY(-3px) scale(1.05);
+        box-shadow: 0 15px 40px rgba(102, 126, 234, 0.4);
+        color: white;
+        text-decoration: none;
+      }
+
+      .page-info {
+        background: linear-gradient(135deg, #f8f9ff 0%, #ffffff 100%);
+        padding: 20px;
+        border-radius: 15px;
+        text-align: center;
+        color: #6c757d;
+        font-weight: 500;
+        margin-top: 20px;
+        border: 1px solid rgba(102, 126, 234, 0.08);
+      }
+
+      @media (max-width: 768px) {
+        .page-header {
+          padding: 40px 25px;
+          text-align: center;
+        }
+
+        .page-title {
+          font-size: 2.5rem;
+        }
+
+        .search-filters-card {
+          padding: 25px;
+        }
+
+        .filters-container {
+          flex-direction: column;
+          gap: 20px;
+          align-items: stretch;
+        }
+
+        .filter-group {
+          flex-direction: column;
+          gap: 8px;
+          align-items: stretch;
+        }
+
+        .filter-select {
+          min-width: auto;
+          width: 100%;
+        }
+
+        .books-grid {
+          grid-template-columns: 1fr;
+          gap: 25px;
+        }
+
+        .book-card {
+          padding: 25px;
+        }
+
+        .book-header {
+          gap: 20px;
+        }
+
+        .book-actions {
+          flex-direction: column;
+        }
+
+        .pagination {
+          gap: 4px;
+        }
+
+        .pagination .page-link {
+          padding: 10px 14px;
+          margin: 0 2px;
+          font-size: 0.9rem;
+        }
+      }
+
+      @media (max-width: 480px) {
+        .book-header {
+          flex-direction: column;
+          align-items: center;
+          text-align: center;
+        }
+
+        .page-title {
+          font-size: 2rem;
+        }
+
+        .search-bar {
+          padding: 12px 15px;
+        }
+
+        .search-form {
+          gap: 15px;
+        }
+
+        .pagination {
+          gap: 2px;
+        }
+
+        .pagination .page-link {
+          padding: 8px 12px;
+          margin: 0 1px;
+          font-size: 0.85rem;
+        }
+      }
+    </style>
+    </th:block>
+</head>
+<body>
+<div layout:fragment="content">
+    <!-- Page Header -->
+    <div class="page-header">
+        <div class="content">
+            <div class="row align-items-center">
+                <div class="col">
+                    <h1 class="page-title">
+                        <i class="fas fa-book me-3"></i>Books
+                    </h1>
+                    <p class="page-subtitle">Explore our extensive collection of literary treasures</p>
+                </div>
+                <div class="col-auto" sec:authorize="hasAnyRole('LIBRARIAN', 'ADMIN')">
+                    <a href="/books/new" th:href="@{/books/new}" class="add-btn">
+                        <i class="fas fa-plus me-2"></i>Add New Book
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Search and Filters -->
+    <div class="search-filters-card">
+        <form th:action="@{/books}" method="get">
+            <!-- Search Bar -->
+            <div class="search-bar">
+                <div class="search-form">
+                    <input type="text"
+                           name="search"
+                           class="search-input"
+                           placeholder="Search by title, author, ISBN..."
+                           th:value="${search}">
+                    <button class="search-btn" type="submit">
+                        <i class="fas fa-search me-1"></i>Search
+                    </button>
+                </div>
+            </div>
+
+            <!-- Filters Row -->
+            <div class="filters-container">
+                <div class="filter-group">
+                    <label class="filter-label">SORT BY</label>
+                    <select name="sortBy" class="filter-select">
+                        <option value="title" th:selected="${sortBy == 'title'}">Title</option>
+                        <option value="publicationDate" th:selected="${sortBy == 'publicationDate'}">Publication Date</option>
+                        <option value="price" th:selected="${sortBy == 'price'}">Price</option>
+                    </select>
+                </div>
+                <div class="filter-group">
+                    <label class="filter-label">ORDER</label>
+                    <select name="sortDirection" class="filter-select">
+                        <option value="ASC" th:selected="${sortDirection == 'ASC'}">Ascending</option>
+                        <option value="DESC" th:selected="${sortDirection == 'DESC'}">Descending</option>
+                    </select>
+                </div>
+            </div>
+        </form>
+    </div>
+
+    <!-- Books Grid -->
+    <div th:if="${!bookPage.content.empty}">
+        <div class="books-grid">
+            <div th:each="book : ${bookPage.content}" class="book-card">
+                <div class="book-header">
+                    <div class="book-icon">
+                        <i class="fas fa-book-open"></i>
+                    </div>
+                    <div class="book-main-info">
+                        <a th:href="@{/books/{id}(id=${book.id})}" class="book-title" th:text="${book.title}">
+                            Book Title
+                        </a>
+                        <div class="book-isbn" th:text="'ISBN: ' + ${book.isbn}">ISBN: 1234567890</div>
+                    </div>
+                    <div class="price-badge" th:text="'$' + ${#numbers.formatDecimal(book.price, 1, 2)}">$0.00</div>
+                </div>
+
+                <div class="book-info">
+                    <div class="info-row" th:if="${book.category}">
+                        <i class="fas fa-tag"></i>
+                        <span th:text="${book.category.name}">Category</span>
+                    </div>
+
+                    <div class="info-row" th:if="${book.publisher}">
+                        <i class="fas fa-building"></i>
+                        <span th:text="${book.publisher.name}">Publisher</span>
+                    </div>
+
+                    <div class="info-row">
+                        <i class="fas fa-calendar"></i>
+                        <span th:text="${#temporals.format(book.publicationDate, 'MMM dd, yyyy')}">Publication Date</span>
+                    </div>
+
+                    <div class="info-row">
+                        <i class="fas fa-copy"></i>
+                        <span th:text="${book.availableCopies} + ' available copies'">0 available copies</span>
+                    </div>
+                </div>
+
+                <div class="book-badges">
+                    <span th:if="${book.category}" class="category-badge" th:text="${book.category.name}">Category</span>
+                    <span class="availability-badge"
+                          th:classappend="${book.availableCopies > 0} ? 'available' : 'unavailable'"
+                          th:text="${book.availableCopies > 0} ? 'Available' : 'Out of Stock'">Available</span>
+                </div>
+
+                <div class="book-actions">
+                    <a th:href="@{/books/{id}(id=${book.id})}" class="action-btn btn-view">
+                        <i class="fas fa-eye me-1"></i>View
+                    </a>
+                    <a th:href="@{/books/{id}/edit(id=${book.id})}"
+                       class="action-btn btn-edit"
+                       sec:authorize="hasAnyRole('LIBRARIAN', 'ADMIN')">
+                        <i class="fas fa-edit me-1"></i>Edit
+                    </a>
+                    <form th:action="@{/books/{id}/delete(id=${book.id})}"
+                          method="post"
+                          class="d-inline flex-fill"
+                          sec:authorize="hasAnyRole('LIBRARIAN', 'ADMIN')"
+                          onsubmit="return confirm('Are you sure you want to delete this book? This action cannot be undone.');">
+                        <button type="submit" class="action-btn btn-delete w-100">
+                            <i class="fas fa-trash me-1"></i>Delete
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Empty State -->
+    <div th:if="${bookPage.content.empty}" class="empty-state">
+        <i class="fas fa-book-open"></i>
+        <h3>No Books Found</h3>
+        <p>No books match your search criteria. Try adjusting your search terms or add a new book to get started.</p>
+        <div sec:authorize="hasAnyRole('LIBRARIAN', 'ADMIN')">
+            <a href="/books/new" th:href="@{/books/new}" class="empty-btn">
+                <i class="fas fa-plus me-2"></i>Add First Book
+            </a>
+        </div>
+    </div>
+
+    <!-- FIXED PAGINATION - NO LISTS -->
+    <div th:if="${bookPage.totalPages > 1}" class="pagination-card">
+        <nav>
+            <div class="pagination">
+                <div class="page-item" th:classappend="${currentPage == 0} ? 'disabled'">
+                    <a class="page-link"
+                       th:href="@{/books(page=${currentPage - 1}, size=${pageSize}, sortBy=${sortBy}, sortDirection=${sortDirection}, search=${search})}">
+                        <i class="fas fa-chevron-left"></i> Previous
+                    </a>
+                </div>
+
+                <div th:each="pageNum : ${#numbers.sequence(0, bookPage.totalPages - 1)}"
+                     class="page-item"
+                     th:classappend="${pageNum == currentPage} ? 'active'">
+                    <a class="page-link"
+                       th:href="@{/books(page=${pageNum}, size=${pageSize}, sortBy=${sortBy}, sortDirection=${sortDirection}, search=${search})}"
+                       th:text="${pageNum + 1}">1</a>
+                </div>
+
+                <div class="page-item"
+                     th:classappend="${currentPage == bookPage.totalPages - 1} ? 'disabled'">
+                    <a class="page-link"
+                       th:href="@{/books(page=${currentPage + 1}, size=${pageSize}, sortBy=${sortBy}, sortDirection=${sortDirection}, search=${search})}">
+                        Next <i class="fas fa-chevron-right"></i>
+                    </a>
+                </div>
+            </div>
+        </nav>
+    </div>
+
+    <!-- Page Info -->
+    <div class="page-info">
+        Showing page <strong th:text="${currentPage + 1}">1</strong> of
+        <strong th:text="${bookPage.totalPages}">1</strong>
+        (Total books: <strong th:text="${bookPage.totalElements}">0</strong>)
+    </div>
+</div>
+<th:block layout:fragment="scripts">
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</th:block>
+</body>
+</html>

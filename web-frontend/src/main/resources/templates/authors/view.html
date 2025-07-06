@@ -1,0 +1,819 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      xmlns:sec="http://www.w3.org/1999/xhtml"
+      layout:decorate="~{layout/main}">
+<head>
+    <title th:text="${author.firstName + ' ' + author.lastName}">Author Details</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap');
+        
+        * {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+        }
+        
+        body {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            position: relative;
+        }
+        
+        body::before {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: 
+                radial-gradient(circle at 20% 80%, rgba(120, 119, 198, 0.3) 0%, transparent 50%),
+                radial-gradient(circle at 80% 20%, rgba(255, 119, 198, 0.15) 0%, transparent 50%),
+                radial-gradient(circle at 40% 40%, rgba(120, 200, 255, 0.1) 0%, transparent 50%);
+            pointer-events: none;
+            z-index: -1;
+        }
+        
+        /* Page Header */
+        .page-header {
+            background: linear-gradient(135deg, rgba(255,255,255,0.25) 0%, rgba(255,255,255,0.1) 100%);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(255,255,255,0.2);
+            color: white;
+            border-radius: 24px;
+            padding: 50px;
+            margin-bottom: 40px;
+            position: relative;
+            overflow: hidden;
+            box-shadow: 
+                0 25px 50px rgba(0,0,0,0.1),
+                inset 0 1px 0 rgba(255,255,255,0.2);
+            transform: translateY(0);
+            transition: all 0.3s ease;
+        }
+        
+        .page-header:hover {
+            transform: translateY(-5px);
+            box-shadow: 
+                0 35px 70px rgba(0,0,0,0.15),
+                inset 0 1px 0 rgba(255,255,255,0.3);
+        }
+        
+        .page-header::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: 
+                radial-gradient(circle at 30% 70%, rgba(255,255,255,0.1) 0%, transparent 50%),
+                linear-gradient(45deg, rgba(255,255,255,0.05) 0%, transparent 100%);
+            pointer-events: none;
+        }
+        
+        .author-header-content {
+            position: relative;
+            z-index: 1;
+            display: flex;
+            align-items: center;
+            gap: 30px;
+            flex-wrap: wrap;
+        }
+        
+        .author-avatar-large {
+            width: 120px;
+            height: 120px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, rgba(255,255,255,0.3) 0%, rgba(255,255,255,0.1) 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 3rem;
+            color: white;
+            font-weight: 900;
+            border: 3px solid rgba(255,255,255,0.2);
+            box-shadow: 0 15px 40px rgba(0,0,0,0.2);
+            backdrop-filter: blur(10px);
+        }
+        
+        .author-header-info {
+            flex: 1;
+            min-width: 300px;
+        }
+        
+        .author-name {
+            font-size: 3.5rem;
+            font-weight: 900;
+            margin-bottom: 15px;
+            text-shadow: 2px 4px 8px rgba(0,0,0,0.3);
+            background: linear-gradient(135deg, #ffffff 0%, #f0f8ff 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            line-height: 1.2;
+        }
+        
+        .author-meta {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 20px;
+            margin-top: 20px;
+        }
+        
+        .author-meta-item {
+            background: rgba(255, 255, 255, 0.2);
+            padding: 10px 20px;
+            border-radius: 50px;
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255,255,255,0.3);
+            color: white;
+            font-weight: 600;
+            font-size: 0.9rem;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .author-meta-item:hover {
+            transform: translateY(-2px);
+            background: rgba(255, 255, 255, 0.3);
+            box-shadow: 0 8px 20px rgba(255,255,255,0.1);
+        }
+        
+        .author-meta-item i {
+            opacity: 0.8;
+        }
+        
+        /* Content Cards */
+        .content-card {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(20px);
+            border-radius: 24px;
+            box-shadow: 
+                0 20px 40px rgba(0,0,0,0.1),
+                inset 0 1px 0 rgba(255,255,255,0.8);
+            border: 1px solid rgba(255,255,255,0.3);
+            margin-bottom: 30px;
+            overflow: hidden;
+            transform: translateY(0);
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        
+        .content-card:hover {
+            transform: translateY(-8px);
+            box-shadow: 
+                0 30px 60px rgba(0,0,0,0.15),
+                inset 0 1px 0 rgba(255,255,255,0.9);
+        }
+        
+        .card-header {
+            background: linear-gradient(135deg, rgba(102, 126, 234, 0.1) 0%, rgba(255,255,255,0.8) 100%);
+            border-bottom: 1px solid rgba(102, 126, 234, 0.15);
+            padding: 25px 30px;
+            position: relative;
+        }
+        
+        .card-header::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 2px;
+            background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
+        }
+        
+        .card-header h4 {
+            margin: 0;
+            color: #2d3748;
+            font-weight: 700;
+            font-size: 1.4rem;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        
+        .card-header i {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            font-size: 1.2rem;
+        }
+        
+        .card-body {
+            padding: 30px;
+        }
+        
+        /* Details Grid */
+        .details-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 25px;
+        }
+        
+        .detail-item {
+            background: linear-gradient(135deg, rgba(102, 126, 234, 0.03) 0%, rgba(255,255,255,0.5) 100%);
+            border-radius: 16px;
+            padding: 20px;
+            border: 1px solid rgba(102, 126, 234, 0.08);
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .detail-item::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 4px;
+            height: 100%;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            transform: scaleY(0);
+            transition: transform 0.3s ease;
+        }
+        
+        .detail-item:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 25px rgba(102, 126, 234, 0.15);
+            border-color: rgba(102, 126, 234, 0.2);
+        }
+        
+        .detail-item:hover::before {
+            transform: scaleY(1);
+        }
+        
+        .detail-label {
+            font-weight: 600;
+            color: #718096;
+            font-size: 0.85rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 8px;
+            display: block;
+        }
+        
+        .detail-value {
+            font-size: 1.2rem;
+            font-weight: 600;
+            color: #2d3748;
+        }
+        
+        /* Biography Section */
+        .biography-section {
+            padding: 30px;
+            background: linear-gradient(135deg, rgba(102, 126, 234, 0.05) 0%, rgba(255,255,255,0.8) 100%);
+            border-radius: 20px;
+            margin-top: 25px;
+            border: 1px solid rgba(102, 126, 234, 0.1);
+            position: relative;
+        }
+        
+        .biography-content {
+            line-height: 1.8;
+            color: #4a5568;
+            font-size: 1.1rem;
+            white-space: pre-wrap;
+            font-weight: 400;
+        }
+        
+        /* Books Section */
+        .books-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 25px;
+            margin-top: 25px;
+        }
+        
+        .book-card {
+            background: linear-gradient(135deg, rgba(102, 126, 234, 0.03) 0%, rgba(255,255,255,0.9) 100%);
+            border-radius: 16px;
+            padding: 20px;
+            border: 1px solid rgba(102, 126, 234, 0.1);
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .book-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 4px;
+            height: 100%;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            transform: scaleY(0);
+            transition: transform 0.3s ease;
+        }
+        
+        .book-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 12px 30px rgba(102, 126, 234, 0.15);
+            border-color: rgba(102, 126, 234, 0.2);
+        }
+        
+        .book-card:hover::before {
+            transform: scaleY(1);
+        }
+        
+        .book-title {
+            font-weight: 700;
+            color: #2d3748;
+            font-size: 1.2rem;
+            margin-bottom: 10px;
+            text-decoration: none;
+            display: block;
+        }
+        
+        .book-title:hover {
+            color: #667eea;
+            text-decoration: none;
+        }
+        
+        .book-info {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 15px;
+        }
+        
+        .book-category {
+            background: linear-gradient(135deg, rgba(102, 126, 234, 0.1) 0%, rgba(255,255,255,0.8) 100%);
+            color: #667eea;
+            padding: 4px 12px;
+            border-radius: 12px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            border: 1px solid rgba(102, 126, 234, 0.2);
+        }
+        
+        .book-year {
+            color: #718096;
+            font-size: 0.9rem;
+            font-weight: 500;
+        }
+        
+        /* Sidebar Card */
+        .sidebar-card {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(20px);
+            border-radius: 24px;
+            border: 1px solid rgba(255,255,255,0.3);
+            overflow: hidden;
+            transform: translateY(0);
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            box-shadow: 
+                0 20px 40px rgba(0,0,0,0.1),
+                inset 0 1px 0 rgba(255,255,255,0.8);
+            position: sticky;
+            top: 20px;
+        }
+        
+        .sidebar-card:hover {
+            transform: translateY(-8px);
+            box-shadow: 
+                0 30px 60px rgba(0,0,0,0.15),
+                inset 0 1px 0 rgba(255,255,255,0.9);
+        }
+        
+        .sidebar-header {
+            background: linear-gradient(135deg, rgba(102, 126, 234, 0.1) 0%, rgba(255,255,255,0.8) 100%);
+            border-bottom: 1px solid rgba(102, 126, 234, 0.15);
+            padding: 25px 30px;
+            position: relative;
+        }
+        
+        .sidebar-header::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 2px;
+            background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
+        }
+        
+        .sidebar-title {
+            margin: 0;
+            color: #2d3748;
+            font-weight: 700;
+            font-size: 1.4rem;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        
+        .sidebar-body {
+            padding: 30px;
+            text-align: center;
+        }
+        
+        /* Statistics */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+        
+        .stat-item {
+            text-align: center;
+            padding: 20px;
+            background: linear-gradient(135deg, rgba(102, 126, 234, 0.05) 0%, rgba(255,255,255,0.8) 100%);
+            border-radius: 16px;
+            border: 1px solid rgba(102, 126, 234, 0.1);
+            transition: all 0.3s ease;
+        }
+        
+        .stat-item:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 20px rgba(102, 126, 234, 0.15);
+        }
+        
+        .stat-number {
+            font-size: 2rem;
+            font-weight: 900;
+            color: #667eea;
+            display: block;
+            margin-bottom: 5px;
+        }
+        
+        .stat-label {
+            font-size: 0.8rem;
+            color: #718096;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        
+        /* Buttons Container */
+        .buttons-container {
+            display: flex;
+            gap: 15px;
+            margin-top: 30px;
+            flex-wrap: wrap;
+        }
+        
+        .delete-form {
+            display: inline;
+        }
+        
+        /* Buttons */
+        .btn-custom {
+            padding: 15px 30px;
+            border-radius: 16px;
+            font-weight: 700;
+            font-size: 1rem;
+            border: none;
+            text-decoration: none;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            position: relative;
+            overflow: hidden;
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+            box-shadow: 0 8px 20px rgba(0,0,0,0.1);
+        }
+        
+        .btn-custom::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
+            transition: left 0.5s ease;
+        }
+        
+        .btn-custom:hover::before {
+            left: 100%;
+        }
+        
+        .btn-edit {
+            background: linear-gradient(135deg, #4299e1 0%, #3182ce 100%);
+            color: white;
+        }
+        
+        .btn-edit:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 15px 35px rgba(66, 153, 225, 0.4);
+            color: white;
+            text-decoration: none;
+        }
+        
+        .btn-delete {
+            background: linear-gradient(135deg, #f56565 0%, #e53e3e 100%);
+            color: white;
+        }
+        
+        .btn-delete:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 15px 35px rgba(245, 101, 101, 0.4);
+            color: white;
+            text-decoration: none;
+        }
+        
+        .btn-back {
+            background: linear-gradient(135deg, #a0aec0 0%, #718096 100%);
+            color: white;
+        }
+        
+        .btn-back:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 15px 35px rgba(160, 174, 192, 0.4);
+            color: white;
+            text-decoration: none;
+        }
+        
+        /* Empty State */
+        .empty-books {
+            text-align: center;
+            padding: 40px;
+            color: #a0aec0;
+        }
+        
+        .empty-books i {
+            font-size: 3rem;
+            margin-bottom: 15px;
+            display: block;
+            opacity: 0.6;
+        }
+        
+        /* Responsive Design */
+        @media (max-width: 768px) {
+            .page-header {
+                padding: 30px 25px;
+                margin-bottom: 30px;
+                border-radius: 20px;
+            }
+            
+            .author-header-content {
+                flex-direction: column;
+                text-align: center;
+                gap: 20px;
+            }
+            
+            .author-name {
+                font-size: 2.5rem;
+            }
+            
+            .author-meta {
+                justify-content: center;
+            }
+            
+            .details-grid {
+                grid-template-columns: 1fr;
+                gap: 20px;
+            }
+            
+            .books-grid {
+                grid-template-columns: 1fr;
+                gap: 20px;
+            }
+            
+            .card-body, .sidebar-body {
+                padding: 25px;
+            }
+            
+            .buttons-container {
+                flex-direction: column;
+                gap: 12px;
+            }
+            
+            .btn-custom {
+                width: 100%;
+                justify-content: center;
+                padding: 12px 25px;
+            }
+            
+            .stats-grid {
+                grid-template-columns: repeat(2, 1fr);
+                gap: 15px;
+            }
+        }
+        
+        @media (max-width: 480px) {
+            .page-header {
+                padding: 25px 20px;
+            }
+            
+            .author-name {
+                font-size: 2rem;
+            }
+            
+            .card-body, .sidebar-body {
+                padding: 20px;
+            }
+            
+            .author-avatar-large {
+                width: 100px;
+                height: 100px;
+                font-size: 2.5rem;
+            }
+        }
+        
+        /* Scroll animations */
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        
+        .content-card, .sidebar-card {
+            animation: fadeInUp 0.6s ease forwards;
+        }
+        
+        .content-card:nth-child(2) {
+            animation-delay: 0.1s;
+        }
+        
+        .content-card:nth-child(3) {
+            animation-delay: 0.2s;
+        }
+    </style>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Add confirmation for delete action
+            const deleteButtons = document.querySelectorAll('.btn-delete');
+            deleteButtons.forEach(button => {
+                button.addEventListener('click', function(e) {
+                    if (!confirm('Are you sure you want to delete this author? This action cannot be undone.')) {
+                        e.preventDefault();
+                    }
+                });
+            });
+
+            // Add loading state for buttons
+            const buttons = document.querySelectorAll('.btn-custom');
+            buttons.forEach(button => {
+                button.addEventListener('click', function() {
+                    if (this.type === 'submit' || this.tagName === 'BUTTON') {
+                        const originalText = this.innerHTML;
+                        this.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Loading...';
+                        this.disabled = true;
+                        
+                        setTimeout(() => {
+                            this.innerHTML = originalText;
+                            this.disabled = false;
+                        }, 3000);
+                    }
+                });
+            });
+        });
+    </script>
+</head>
+<body>
+<div layout:fragment="content">
+    <!-- Page Header -->
+    <div class="page-header">
+        <div class="author-header-content">
+            <div class="author-avatar-large" th:text="${author.firstName.substring(0,1) + author.lastName.substring(0,1)}">
+                AB
+            </div>
+            
+            <div class="author-header-info">
+                <h1 class="author-name" th:text="${author.firstName + ' ' + author.lastName}">Author Name</h1>
+                
+                <div class="author-meta">
+                    <div class="author-meta-item" th:if="${author.nationality}">
+                        <i class="fas fa-globe"></i>
+                        <span th:text="${author.nationality}">Nationality</span>
+                    </div>
+                    
+                    <div class="author-meta-item" th:if="${author.birthDate}">
+                        <i class="fas fa-calendar-alt"></i>
+                        <span th:text="${#temporals.format(author.birthDate, 'MMMM d, yyyy')}">Birth Date</span>
+                    </div>
+                    
+                    <div class="author-meta-item">
+                        <i class="fas fa-book"></i>
+                        <span th:text="${author.books.size()} + ' books published'">Books Published</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <!-- Main Content Column -->
+        <div class="col-md-8">
+            <!-- Author Details Card -->
+            <div class="content-card">
+                <div class="card-header">
+                    <h4><i class="fas fa-user-circle"></i> Author Information</h4>
+                </div>
+                <div class="card-body">
+                    <div class="details-grid">
+                        <div class="detail-item">
+                            <span class="detail-label">Full Name</span>
+                            <div class="detail-value" th:text="${author.firstName + ' ' + author.lastName}">Author Name</div>
+                        </div>
+                        
+                        <div class="detail-item" th:if="${author.nationality}">
+                            <span class="detail-label">Nationality</span>
+                            <div class="detail-value" th:text="${author.nationality}">Nationality</div>
+                        </div>
+                        
+                        <div class="detail-item" th:if="${author.birthDate}">
+                            <span class="detail-label">Birth Date</span>
+                            <div class="detail-value" th:text="${#temporals.format(author.birthDate, 'MMMM dd, yyyy')}">Birth Date</div>
+                        </div>
+                        
+                        <div class="detail-item">
+                            <span class="detail-label">Books Published</span>
+                            <div class="detail-value" th:text="${author.books.size()} + ' books'">0 books</div>
+                        </div>
+                    </div>
+                    
+                    <!-- Biography Section -->
+                    <div class="biography-section" th:if="${author.biography}">
+                        <h5 style="margin-bottom: 20px; color: #2d3748; font-weight: 700;">
+                            <i class="fas fa-quote-left" style="color: #667eea; margin-right: 10px;"></i>Biography
+                        </h5>
+                        <div class="biography-content" th:text="${author.biography}">
+                            Author biography goes here...
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Published Books Card -->
+            <div class="content-card">
+                <div class="card-header">
+                    <h4><i class="fas fa-books"></i> Published Books</h4>
+                </div>
+                <div class="card-body">
+                    <div th:if="${!author.books.isEmpty()}" class="books-grid">
+                        <div th:each="book : ${author.books}" class="book-card">
+                            <a th:href="@{/books/{id}(id=${book.id})}" class="book-title" th:text="${book.title}">
+                                Book Title
+                            </a>
+                            
+                            <p class="text-muted" th:text="${#strings.abbreviate(book.description, 120)}" style="margin: 10px 0; line-height: 1.5;">
+                                Book description excerpt...
+                            </p>
+                            
+                            <div class="book-info">
+                                <span class="book-category" th:if="${book.category}" th:text="${book.category.name}">Category</span>
+                                <span class="book-year" th:text="${#temporals.format(book.publicationDate, 'yyyy')}">2023</span>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div th:if="${author.books.isEmpty()}" class="empty-books">
+                        <i class="fas fa-book-open"></i>
+                        <h5>No Books Published</h5>
+                        <p class="text-muted">This author hasn't published any books yet.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Sidebar Column -->
+        <div class="col-md-4">
+            <!-- Statistics Card -->
+            <div class="sidebar-card">
+                <div class="sidebar-header">
+                    <h4 class="sidebar-title">
+                        <i class="fas fa-chart-bar"></i> 
+                        Statistics
+                    </h4>
+                </div>
+                <div class="sidebar-body">
+                    <div class="stats-grid">
+                        <div class="stat-item">
+                            <span class="stat-number" th:text="${author.books.size()}">0</span>
+                            <span class="stat-label">Books</span>
+                        </div>
+                        
+                        <div class="stat-item">
+                            <span class="stat-number" th:text="${author.books.stream().mapToInt(book -> book.pages).sum()}">0</span>
+                            <span class="stat-label">Total Pages</span>
+                        </div>
+                        
+                        <div class="stat-item">
+                            <span class="stat-number" th:text="${author.books.stream().map(book -> book.category).distinct().count()}">0</span>
+                            <span class="stat-label">Categories</span>
+                        </div>
+                        
+                        <div class="stat-item">
+                            <span class="stat-number" th:text="${author.birthDate != null ? T(java.time.Period).between(author.birthDate, T(java.time.LocalDate).now()).getYears() : 'N/A'}">N/A</span>
+                            <span class="stat-label">Age</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+</body>
+</html>

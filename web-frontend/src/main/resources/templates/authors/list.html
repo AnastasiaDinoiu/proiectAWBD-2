@@ -1,0 +1,609 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      xmlns:sec="http://www.w3.org/1999/xhtml"
+      layout:decorate="~{layout/main}">
+<head>
+    <title>Authors - Library Management</title>
+    <style>
+        .page-header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border-radius: 20px;
+            padding: 40px;
+            margin-bottom: 40px;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .page-header::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><defs><pattern id="dots" width="20" height="20" patternUnits="userSpaceOnUse"><circle cx="10" cy="10" r="1.5" fill="rgba(255,255,255,0.1)"/></pattern></defs><rect width="100" height="100" fill="url(%23dots)"/></svg>');
+            opacity: 0.3;
+        }
+        
+        .page-header .content {
+            position: relative;
+            z-index: 1;
+        }
+        
+        .page-title {
+            font-size: 3rem;
+            font-weight: 700;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.2);
+        }
+        
+        .page-subtitle {
+            font-size: 1.2rem;
+            opacity: 0.9;
+            margin-bottom: 0;
+        }
+        
+        .add-btn {
+            background: rgba(255,255,255,0.2);
+            border: 2px solid rgba(255,255,255,0.3);
+            color: white;
+            padding: 12px 30px;
+            border-radius: 50px;
+            font-weight: 600;
+            text-decoration: none;
+            transition: all 0.3s ease;
+            backdrop-filter: blur(10px);
+        }
+        
+        .add-btn:hover {
+            background: rgba(255,255,255,0.3);
+            border-color: rgba(255,255,255,0.5);
+            color: white;
+            text-decoration: none;
+            transform: translateY(-2px);
+        }
+        
+        .search-bar {
+            background: white;
+            border-radius: 40px;
+            padding: 10px 15px;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.08);
+            margin-bottom: 40px;
+            border: 1px solid rgba(102, 126, 234, 0.1);
+            max-width: 600px;
+        }
+        
+        .search-form {
+            display: flex;
+            align-items: center;
+            width: 100%;
+            gap: 15px;
+        }
+        
+        .search-input {
+            border: none;
+            background: transparent;
+            padding: 8px 0;
+            font-size: 0.95rem;
+            outline: none;
+            flex: 1;
+            min-width: 0;
+        }
+        
+        .search-input::placeholder {
+            color: #adb5bd;
+        }
+        
+        .search-btn {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border: none;
+            border-radius: 25px;
+            padding: 10px 20px;
+            color: white;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            font-size: 0.85rem;
+            white-space: nowrap;
+            flex-shrink: 0;
+        }
+        
+        .search-btn:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+        }
+        
+        .authors-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+            gap: 30px;
+            margin-bottom: 40px;
+        }
+        
+        .author-card {
+            background: white;
+            border-radius: 20px;
+            padding: 30px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+            border: 1px solid rgba(102, 126, 234, 0.1);
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .author-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+        
+        .author-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 20px 40px rgba(0,0,0,0.15);
+        }
+        
+        .author-avatar {
+            width: 80px;
+            height: 80px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 2rem;
+            color: white;
+            font-weight: 700;
+            margin-bottom: 20px;
+            box-shadow: 0 8px 20px rgba(102, 126, 234, 0.3);
+        }
+        
+        .author-name {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: #2c3e50;
+            margin-bottom: 15px;
+            text-decoration: none;
+            display: block;
+        }
+        
+        .author-name:hover {
+            color: #667eea;
+            text-decoration: none;
+        }
+        
+        .author-info {
+            margin-bottom: 20px;
+        }
+        
+        .info-item {
+            display: flex;
+            align-items: flex-start;
+            margin-bottom: 8px;
+            color: #6c757d;
+            line-height: 1.4;
+        }
+        
+        .info-item i {
+            width: 18px;
+            color: #667eea;
+            margin-top: 2px;
+            flex-shrink: 0;
+        }
+        
+        .info-content {
+            flex: 1;
+        }
+        
+        .nationality-badge {
+            background: linear-gradient(135deg, #51cf66 0%, #40c057 100%);
+            color: white;
+            padding: 4px 12px;
+            border-radius: 15px;
+            font-size: 0.8rem;
+            font-weight: 500;
+            display: inline-block;
+        }
+        
+        .books-count {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 4px 12px;
+            border-radius: 15px;
+            font-weight: 600;
+            font-size: 0.8rem;
+            display: inline-block;
+        }
+        
+        .author-actions {
+            display: flex;
+            gap: 8px;
+            margin-top: 20px;
+            padding-top: 20px;
+            border-top: 1px solid rgba(102, 126, 234, 0.1);
+        }
+        
+        .action-btn {
+            border: none;
+            border-radius: 10px;
+            padding: 8px 12px;
+            transition: all 0.3s ease;
+            font-size: 0.875rem;
+            flex: 1;
+            text-decoration: none;
+            text-align: center;
+        }
+        
+        .action-btn:hover {
+            transform: translateY(-2px);
+            text-decoration: none;
+        }
+        
+        .btn-view {
+            background: linear-gradient(135deg, #17a2b8 0%, #138496 100%);
+            color: white;
+        }
+        
+        .btn-view:hover {
+            box-shadow: 0 5px 15px rgba(23, 162, 184, 0.3);
+            color: white;
+        }
+        
+        .btn-edit {
+            background: linear-gradient(135deg, #ffc107 0%, #e0a800 100%);
+            color: white;
+        }
+        
+        .btn-edit:hover {
+            box-shadow: 0 5px 15px rgba(255, 193, 7, 0.3);
+            color: white;
+        }
+        
+        .btn-delete {
+            background: linear-gradient(135deg, #dc3545 0%, #c82333 100%);
+            color: white;
+        }
+        
+        .btn-delete:hover {
+            box-shadow: 0 5px 15px rgba(220, 53, 69, 0.3);
+            color: white;
+        }
+        
+        /* FIXED PAGINATION STYLING - NO LISTS */
+        .pagination-card {
+            background: white;
+            border-radius: 15px;
+            padding: 20px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+            border: 1px solid rgba(102, 126, 234, 0.1);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+        
+        .pagination {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin: 0;
+            padding: 0;
+        }
+        
+        .page-item {
+            display: flex;
+            align-items: center;
+            margin: 0;
+            padding: 0;
+        }
+        
+        .pagination .page-link {
+            border: none;
+            border-radius: 10px;
+            margin: 0 5px;
+            padding: 12px 16px;
+            color: #667eea;
+            font-weight: 500;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            background: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+        }
+        
+        .pagination .page-item.active .page-link {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border-color: transparent;
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.3);
+            color: white;
+        }
+        
+        .pagination .page-link:hover {
+            background: rgba(102, 126, 234, 0.1);
+            color: #5a67d8;
+            transform: translateY(-2px);
+            text-decoration: none;
+            box-shadow: 0 6px 20px rgba(0,0,0,0.1);
+        }
+        
+        .pagination .page-item.active .page-link:hover {
+            background: linear-gradient(135deg, #5a67d8 0%, #6b46c1 100%);
+            color: white;
+            transform: translateY(-3px);
+            box-shadow: 0 8px 25px rgba(102, 126, 234, 0.4);
+        }
+        
+        .pagination .page-item.disabled .page-link {
+            color: #6c757d;
+            background: #f8f9fa;
+            cursor: not-allowed;
+            pointer-events: none;
+            box-shadow: none;
+        }
+        
+        .pagination .page-item.disabled .page-link:hover {
+            transform: none;
+            box-shadow: none;
+            background: #f8f9fa;
+            color: #6c757d;
+        }
+        
+        .empty-state {
+            text-align: center;
+            padding: 80px 20px;
+            color: #6c757d;
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+        }
+        
+        .empty-state i {
+            font-size: 5rem;
+            margin-bottom: 30px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        
+        .empty-state h3 {
+            font-size: 2rem;
+            font-weight: 700;
+            margin-bottom: 15px;
+            color: #2c3e50;
+        }
+        
+        .empty-state p {
+            font-size: 1.1rem;
+            margin-bottom: 30px;
+        }
+        
+        .empty-btn {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border: none;
+            border-radius: 50px;
+            padding: 15px 30px;
+            color: white;
+            font-weight: 600;
+            text-decoration: none;
+            transition: all 0.3s ease;
+            display: inline-block;
+        }
+        
+        .empty-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(102, 126, 234, 0.3);
+            color: white;
+            text-decoration: none;
+        }
+        
+        @media (max-width: 768px) {
+            .page-header {
+                padding: 30px 20px;
+                text-align: center;
+            }
+            
+            .page-title {
+                font-size: 2rem;
+            }
+            
+            .search-bar {
+                padding: 8px 12px;
+                max-width: 100%;
+            }
+            
+            .search-btn {
+                padding: 6px 12px;
+                font-size: 0.8rem;
+            }
+            
+            .authors-grid {
+                grid-template-columns: 1fr;
+                gap: 20px;
+            }
+            
+            .author-card {
+                padding: 20px;
+            }
+            
+            .author-actions {
+                flex-direction: column;
+            }
+            
+            .pagination {
+                gap: 5px;
+            }
+            
+            .pagination .page-link {
+                padding: 10px 14px;
+                margin: 0 2px;
+                font-size: 0.9rem;
+            }
+        }
+        
+        @media (max-width: 480px) {
+            .pagination {
+                gap: 2px;
+            }
+            
+            .pagination .page-link {
+                padding: 8px 12px;
+                margin: 0 1px;
+                font-size: 0.85rem;
+            }
+        }
+    </style>
+</head>
+<body>
+<div layout:fragment="content">
+    <!-- Page Header -->
+    <div class="page-header">
+        <div class="content">
+            <div class="row align-items-center">
+                <div class="col">
+                    <h1 class="page-title">
+                        <i class="fas fa-user-edit me-3"></i>Authors
+                    </h1>
+                    <p class="page-subtitle">Discover and manage the brilliant minds behind our books</p>
+                </div>
+                <div class="col-auto" sec:authorize="hasRole('LIBRARIAN')">
+                    <a href="/authors/new" th:href="@{/authors/new}" class="add-btn">
+                        <i class="fas fa-plus me-2"></i>Add New Author
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Compact Search Bar -->
+    <div class="search-bar">
+        <form th:action="@{/authors}" method="get" class="search-form">
+            <input type="text" 
+                id="search"
+                name="search" 
+                class="search-input"
+                placeholder="Search authors by name, nationality..." 
+                th:value="${search}">
+            <button class="search-btn" type="submit">
+                <i class="fas fa-search me-1"></i>Search
+            </button>
+        </form>
+    </div>
+
+    <!-- Authors Grid -->
+    <div th:if="${!authorPage.content.empty}">
+        <div class="authors-grid">
+            <div th:each="author : ${authorPage.content}" class="author-card">
+                <div class="author-avatar" th:text="${author.firstName.substring(0,1) + author.lastName.substring(0,1)}">
+                    AB
+                </div>
+                
+                <a th:href="@{/authors/{id}(id=${author.id})}" class="author-name">
+                    <span th:text="${author.firstName + ' ' + author.lastName}">Author Name</span>
+                </a>
+                
+                <div class="author-info">
+                    <div class="info-item">
+                        <i class="fas fa-globe"></i>
+                        <div class="info-content">
+                            <span th:if="${author.nationality}" class="nationality-badge" th:text="${author.nationality}">Nationality</span>
+                            <span th:unless="${author.nationality}" class="text-muted">Unknown nationality</span>
+                        </div>
+                    </div>
+                    
+                    <div class="info-item">
+                        <i class="fas fa-calendar"></i>
+                        <div class="info-content">
+                            <span th:if="${author.birthDate}" th:text="${#temporals.format(author.birthDate, 'MMM dd, yyyy')}">Birth Date</span>
+                            <span th:unless="${author.birthDate}" class="text-muted">Birth date not specified</span>
+                        </div>
+                    </div>
+                    
+                    <div class="info-item">
+                        <i class="fas fa-book"></i>
+                        <div class="info-content">
+                            <span class="books-count" th:text="${author.books.size()} + ' books'">0 books</span>
+                        </div>
+                    </div>
+                    
+                    <div class="info-item" th:if="${author.biography}">
+                        <i class="fas fa-quote-left"></i>
+                        <div class="info-content">
+                            <span class="text-muted" th:text="${#strings.abbreviate(author.biography, 60)}">Biography excerpt...</span>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="author-actions">
+                    <a th:href="@{/authors/{id}(id=${author.id})}" class="action-btn btn-view">
+                        <i class="fas fa-eye me-1"></i>View
+                    </a>
+                    <a th:href="@{/authors/{id}/edit(id=${author.id})}"
+                       class="action-btn btn-edit"
+                       sec:authorize="hasRole('LIBRARIAN')">
+                        <i class="fas fa-edit me-1"></i>Edit
+                    </a>
+                    <form th:action="@{/authors/{id}/delete(id=${author.id})}"
+                          method="post" 
+                          class="d-inline flex-fill"
+                          sec:authorize="hasRole('LIBRARIAN')"
+                          onsubmit="return confirm('Are you sure you want to delete this author? This action cannot be undone.');">
+                        <button type="submit" class="action-btn btn-delete w-100">
+                            <i class="fas fa-trash me-1"></i>Delete
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Empty State -->
+    <div th:if="${authorPage.content.empty}" class="empty-state">
+        <i class="fas fa-user-edit"></i>
+        <h3>No Authors Found</h3>
+        <p>No authors match your search criteria. Try adjusting your search terms or add a new author to get started.</p>
+        <div sec:authorize="hasRole('LIBRARIAN')">
+            <a href="/authors/new" th:href="@{/authors/new}" class="empty-btn">
+                <i class="fas fa-plus me-2"></i>Add First Author
+            </a>
+        </div>
+    </div>
+
+    <!-- FIXED PAGINATION - NO LISTS -->
+    <div th:if="${authorPage.totalPages > 1}" class="pagination-card">
+        <nav>
+            <div class="pagination">
+                <div class="page-item" th:classappend="${currentPage == 0} ? 'disabled'">
+                    <a class="page-link"
+                       th:href="@{/authors(page=${currentPage - 1}, size=${pageSize}, search=${search})}">
+                        <i class="fas fa-chevron-left"></i> Previous
+                    </a>
+                </div>
+
+                <div th:each="pageNum : ${#numbers.sequence(0, authorPage.totalPages - 1)}"
+                    class="page-item"
+                    th:classappend="${pageNum == currentPage} ? 'active'">
+                    <a class="page-link"
+                       th:href="@{/authors(page=${pageNum}, size=${pageSize}, search=${search})}"
+                       th:text="${pageNum + 1}">1</a>
+                </div>
+
+                <div class="page-item"
+                    th:classappend="${currentPage == authorPage.totalPages - 1} ? 'disabled'">
+                    <a class="page-link"
+                       th:href="@{/authors(page=${currentPage + 1}, size=${pageSize}, search=${search})}">
+                        Next <i class="fas fa-chevron-right"></i>
+                    </a>
+                </div>
+            </div>
+        </nav>
+    </div>
+</div>
+</body>
+</html>

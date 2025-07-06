@@ -1,0 +1,639 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layout/main}">
+<head>
+    <title>New Loan - Library Management</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap');
+        
+        * {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+        }
+        
+        body {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            position: relative;
+        }
+        
+        body::before {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: 
+                radial-gradient(circle at 20% 80%, rgba(120, 119, 198, 0.3) 0%, transparent 50%),
+                radial-gradient(circle at 80% 20%, rgba(255, 119, 198, 0.15) 0%, transparent 50%),
+                radial-gradient(circle at 40% 40%, rgba(120, 200, 255, 0.1) 0%, transparent 50%);
+            pointer-events: none;
+            z-index: -1;
+        }
+        
+        /* Page Header */
+        .page-header {
+            background: linear-gradient(135deg, rgba(255,255,255,0.25) 0%, rgba(255,255,255,0.1) 100%);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(255,255,255,0.2);
+            color: white;
+            border-radius: 24px;
+            padding: 40px 50px;
+            margin-bottom: 30px;
+            position: relative;
+            overflow: hidden;
+            box-shadow: 
+                0 25px 50px rgba(0,0,0,0.1),
+                inset 0 1px 0 rgba(255,255,255,0.2);
+        }
+        
+        .page-header::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: 
+                radial-gradient(circle at 30% 70%, rgba(255,255,255,0.1) 0%, transparent 50%),
+                linear-gradient(45deg, rgba(255,255,255,0.05) 0%, transparent 100%);
+            pointer-events: none;
+        }
+        
+        .page-title {
+            font-size: 3rem;
+            font-weight: 900;
+            margin: 0;
+            background: linear-gradient(135deg, #ffffff 0%, #f0f8ff 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            text-shadow: 2px 4px 8px rgba(0,0,0,0.3);
+            position: relative;
+            z-index: 1;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+        
+        .page-title i {
+            font-size: 2.5rem;
+            background: linear-gradient(135deg, #ffffff 0%, #f0f8ff 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        
+        .page-subtitle {
+            font-size: 1.1rem;
+            opacity: 0.9;
+            margin: 10px 0 0 0;
+            position: relative;
+            z-index: 1;
+        }
+        
+        /* Form Card */
+        .form-card {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(20px);
+            border-radius: 24px;
+            padding: 40px;
+            box-shadow: 
+                0 25px 50px rgba(0,0,0,0.1),
+                inset 0 1px 0 rgba(255,255,255,0.8);
+            border: 1px solid rgba(255,255,255,0.3);
+            margin-bottom: 30px;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .form-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 5px;
+            background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
+        }
+        
+        /* Form Sections */
+        .form-section {
+            margin-bottom: 30px;
+            position: relative;
+        }
+        
+        .section-title {
+            font-size: 1.4rem;
+            font-weight: 700;
+            color: #2d3748;
+            margin-bottom: 25px;
+            padding-bottom: 15px;
+            border-bottom: 2px solid rgba(102, 126, 234, 0.1);
+            position: relative;
+        }
+        
+        .section-title::after {
+            content: '';
+            position: absolute;
+            bottom: -2px;
+            left: 0;
+            width: 80px;
+            height: 2px;
+            background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
+        }
+        
+        /* Form Elements */
+        .form-label {
+            font-weight: 600;
+            color: #4a5568;
+            margin-bottom: 10px;
+            font-size: 0.95rem;
+            display: block;
+        }
+        
+        .form-control, .form-select {
+            background: rgba(255, 255, 255, 0.8);
+            border: 2px solid rgba(102, 126, 234, 0.15);
+            border-radius: 12px;
+            padding: 12px 15px;
+            font-size: 1rem;
+            color: #2d3748;
+            width: 100%;
+            transition: all 0.3s ease;
+            margin-bottom: 20px;
+        }
+        
+        .form-control:focus, .form-select:focus {
+            border-color: #667eea;
+            outline: none;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.2);
+        }
+        
+        .form-control.is-invalid, .form-select.is-invalid {
+            border-color: #f56565;
+        }
+        
+        .invalid-feedback {
+            color: #f56565;
+            font-size: 0.85rem;
+            margin-top: -15px;
+            margin-bottom: 20px;
+            display: block;
+        }
+        
+        /* Book Selection */
+        .book-selection-container {
+            margin-bottom: 20px;
+        }
+        
+        .search-container {
+            margin-bottom: 20px;
+        }
+        
+        .search-input {
+            padding-left: 40px;
+            background: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="%236c757d" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></svg>') no-repeat 15px center;
+            background-color: rgba(255, 255, 255, 0.8);
+        }
+        
+        .books-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+            gap: 20px;
+            max-height: 400px;
+            overflow-y: auto;
+            padding: 15px;
+            background: rgba(245, 247, 250, 0.5);
+            border-radius: 12px;
+            border: 1px solid rgba(102, 126, 234, 0.1);
+        }
+        
+        .book-card {
+            background: white;
+            border-radius: 12px;
+            padding: 15px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.05);
+            border: 1px solid rgba(102, 126, 234, 0.1);
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+        
+        .book-card:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+            border-color: rgba(102, 126, 234, 0.3);
+        }
+        
+        .book-card.selected {
+            border: 2px solid #667eea;
+            transform: translateY(-3px);
+            box-shadow: 0 10px 25px rgba(102, 126, 234, 0.2);
+        }
+        
+        .book-title {
+            font-weight: 700;
+            color: #2d3748;
+            margin-bottom: 5px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        
+        .book-author {
+            color: #718096;
+            font-size: 0.9rem;
+            margin-bottom: 10px;
+        }
+        
+        .book-availability {
+            padding: 3px 10px;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            display: inline-block;
+        }
+        
+        .available {
+            background: rgba(72, 187, 120, 0.1);
+            color: #38a169;
+        }
+        
+        .unavailable {
+            background: rgba(245, 101, 101, 0.1);
+            color: #e53e3e;
+        }
+        
+        /* User Selection */
+        .users-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+            gap: 20px;
+            max-height: 300px;
+            overflow-y: auto;
+            padding: 15px;
+            background: rgba(245, 247, 250, 0.5);
+            border-radius: 12px;
+            border: 1px solid rgba(102, 126, 234, 0.1);
+        }
+        
+        .user-card {
+            background: white;
+            border-radius: 12px;
+            padding: 15px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.05);
+            border: 1px solid rgba(102, 126, 234, 0.1);
+            transition: all 0.3s ease;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+        
+        .user-card:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+            border-color: rgba(102, 126, 234, 0.3);
+        }
+        
+        .user-card.selected {
+            border: 2px solid #667eea;
+            transform: translateY(-3px);
+            box-shadow: 0 10px 25px rgba(102, 126, 234, 0.2);
+        }
+        
+        .user-avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: 700;
+            font-size: 1rem;
+        }
+        
+        .user-info {
+            flex: 1;
+        }
+        
+        .user-name {
+            font-weight: 700;
+            color: #2d3748;
+            margin-bottom: 3px;
+        }
+        
+        .user-email {
+            color: #718096;
+            font-size: 0.85rem;
+        }
+        
+        /* Date Inputs */
+        .date-inputs {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 25px;
+        }
+        
+        /* Form Actions */
+        .form-actions {
+            display: flex;
+            justify-content: flex-end;
+            gap: 15px;
+            margin-top: 30px;
+        }
+        
+        .btn {
+            padding: 12px 25px;
+            border-radius: 12px;
+            font-weight: 700;
+            font-size: 1rem;
+            border: none;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            box-shadow: 0 8px 15px rgba(102, 126, 234, 0.3);
+        }
+        
+        .btn-primary:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 12px 25px rgba(102, 126, 234, 0.4);
+        }
+        
+        .btn-secondary {
+            background: rgba(203, 213, 224, 0.5);
+            color: #4a5568;
+        }
+        
+        .btn-secondary:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 15px rgba(0,0,0,0.1);
+            background: rgba(203, 213, 224, 0.8);
+        }
+        
+        /* Responsive Design */
+        @media (max-width: 768px) {
+            .page-header {
+                padding: 30px;
+            }
+            
+            .page-title {
+                font-size: 2.2rem;
+            }
+            
+            .form-card {
+                padding: 30px;
+            }
+            
+            .date-inputs {
+                grid-template-columns: 1fr;
+                gap: 15px;
+            }
+            
+            .form-actions {
+                flex-direction: column;
+            }
+            
+            .btn {
+                width: 100%;
+                justify-content: center;
+            }
+        }
+        
+        /* Animations */
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        
+        .form-card {
+            animation: fadeInUp 0.6s ease forwards;
+        }
+    </style>
+</head>
+<body>
+<div layout:fragment="content">
+    <!-- Page Header -->
+    <div class="page-header">
+        <div>
+            <h1 class="page-title">
+                <i class="fas fa-plus-circle"></i>
+                Create New Loan
+            </h1>
+            <p class="page-subtitle">Issue a book to a library user</p>
+        </div>
+    </div>
+
+    <!-- Loan Form -->
+    <div class="form-card">
+        <form th:action="@{/loans/new}" th:object="${loanDTO}" method="post">
+            
+            <!-- Book Selection -->
+            <div class="form-section">
+                <h2 class="section-title">Select Book</h2>
+                
+                <div class="book-selection-container">
+                    <div class="search-container">
+                        <input type="text" class="form-control search-input" id="bookSearch" 
+                               placeholder="Search for books by title, author or ISBN...">
+                    </div>
+                    
+                    <div class="books-grid">
+                        <div th:each="book : ${books}" class="book-card" 
+                             th:data-id="${book.id}" onclick="selectBook(this)">
+                            <div class="book-title" th:text="${book.title}">Book Title</div>
+                            <div class="book-author" th:if="${!book.authors.isEmpty()}" 
+                                 th:text="${book.authors[0].firstName + ' ' + book.authors[0].lastName}">
+                                Author Name
+                            </div>
+                            <div class="book-author" th:if="${book.authors.isEmpty()}">Unknown Author</div>
+                            <div class="book-availability available" 
+                                 th:if="${book.availableCopies > 0}"
+                                 th:text="${book.availableCopies} + ' copies available'">
+                                3 copies available
+                            </div>
+                            <div class="book-availability unavailable" 
+                                 th:unless="${book.availableCopies > 0}">
+                                No copies available
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <input type="hidden" id="selectedBook" name="bookId" th:field="*{bookId}">
+                    <div class="invalid-feedback" th:if="${#fields.hasErrors('bookId')}" 
+                         th:errors="*{bookId}">Book is required</div>
+                </div>
+            </div>
+            
+            <!-- User Selection -->
+            <div class="form-section">
+                <h2 class="section-title">Select User</h2>
+                
+                <div class="search-container">
+                    <input type="text" class="form-control search-input" id="userSearch" 
+                           placeholder="Search for users by name or email...">
+                </div>
+                
+                <div class="users-grid">
+                    <div th:each="user : ${users}" class="user-card" 
+                         th:data-id="${user.id}" onclick="selectUser(this)">
+                        <div class="user-avatar" th:text="${user.username.substring(0,1).toUpperCase()}">U</div>
+                        <div class="user-info">
+                            <div class="user-name" th:text="${user.username}">User Name</div>
+                            <div class="user-email" th:text="${user.email}">user@example.com</div>
+                        </div>
+                    </div>
+                </div>
+                
+                <input type="hidden" id="selectedUser" name="userId" th:field="*{userId}">
+                <div class="invalid-feedback" th:if="${#fields.hasErrors('userId')}" 
+                     th:errors="*{userId}">User is required</div>
+            </div>
+            
+            <!-- Loan Dates -->
+            <div class="form-section">
+                <h2 class="section-title">Loan Period</h2>
+                
+                <div class="date-inputs">
+                    <div>
+                        <label for="loanDate" class="form-label">Loan Date</label>
+                        <input type="date" class="form-control" id="loanDate" name="loanDate" 
+                               th:field="*{loanDate}" th:classappend="${#fields.hasErrors('loanDate')} ? 'is-invalid' : ''">
+                        <div class="invalid-feedback" th:if="${#fields.hasErrors('loanDate')}" 
+                             th:errors="*{loanDate}">Loan date is required</div>
+                    </div>
+                    
+                    <div>
+                        <label for="dueDate" class="form-label">Due Date</label>
+                        <input type="date" class="form-control" id="dueDate" name="dueDate" 
+                               th:field="*{dueDate}" th:classappend="${#fields.hasErrors('dueDate')} ? 'is-invalid' : ''">
+                        <div class="invalid-feedback" th:if="${#fields.hasErrors('dueDate')}" 
+                             th:errors="*{dueDate}">Due date is required</div>
+                    </div>
+                    
+                    <div>
+                        <label for="daysToReturn" class="form-label">Days to Return</label>
+                        <input type="number" class="form-control" id="daysToReturn" name="daysToReturn" min="1" max="30"
+                               th:field="*{daysToReturn}" th:classappend="${#fields.hasErrors('daysToReturn')} ? 'is-invalid' : ''">
+                        <div class="invalid-feedback" th:if="${#fields.hasErrors('daysToReturn')}" 
+                             th:errors="*{daysToReturn}">Days to return is required</div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Form Buttons -->
+            <div class="form-actions">
+                <a href="/loans" th:href="@{/loans}" class="btn btn-secondary">
+                    <i class="fas fa-times"></i> Cancel
+                </a>
+                <button type="submit" class="btn btn-primary">
+                    <i class="fas fa-check"></i> Create Loan
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+    // Book and User Selection
+    function selectBook(element) {
+        // Remove selected class from all books
+        document.querySelectorAll('.book-card').forEach(card => {
+            card.classList.remove('selected');
+        });
+        
+        // Add selected class to clicked book
+        element.classList.add('selected');
+        
+        // Update hidden input
+        document.getElementById('selectedBook').value = element.getAttribute('data-id');
+    }
+    
+    function selectUser(element) {
+        // Remove selected class from all users
+        document.querySelectorAll('.user-card').forEach(card => {
+            card.classList.remove('selected');
+        });
+        
+        // Add selected class to clicked user
+        element.classList.add('selected');
+        
+        // Update hidden input
+        document.getElementById('selectedUser').value = element.getAttribute('data-id');
+    }
+    
+    // Book Search
+    document.getElementById('bookSearch').addEventListener('input', function() {
+        const searchValue = this.value.toLowerCase();
+        
+        document.querySelectorAll('.book-card').forEach(book => {
+            const title = book.querySelector('.book-title').textContent.toLowerCase();
+            const author = book.querySelector('.book-author').textContent.toLowerCase();
+            
+            if (title.includes(searchValue) || author.includes(searchValue)) {
+                book.style.display = 'block';
+            } else {
+                book.style.display = 'none';
+            }
+        });
+    });
+    
+    // User Search
+    document.getElementById('userSearch').addEventListener('input', function() {
+        const searchValue = this.value.toLowerCase();
+        
+        document.querySelectorAll('.user-card').forEach(user => {
+            const name = user.querySelector('.user-name').textContent.toLowerCase();
+            const email = user.querySelector('.user-email').textContent.toLowerCase();
+            
+            if (name.includes(searchValue) || email.includes(searchValue)) {
+                user.style.display = 'flex';
+            } else {
+                user.style.display = 'none';
+            }
+        });
+    });
+    
+    // Set default dates
+    document.addEventListener('DOMContentLoaded', function() {
+        // Set today as default loan date
+        const today = new Date();
+        const loanDate = document.getElementById('loanDate');
+        const dueDate = document.getElementById('dueDate');
+        
+        // Format date as YYYY-MM-DD
+        const formatDate = (date) => {
+            return date.toISOString().split('T')[0];
+        };
+        
+        // Set loan date to today if not already set
+        if (!loanDate.value) {
+            loanDate.value = formatDate(today);
+        }
+        
+        // Set due date to two weeks from today if not already set
+        if (!dueDate.value) {
+            const twoWeeksLater = new Date();
+            twoWeeksLater.setDate(today.getDate() + 14);
+            dueDate.value = formatDate(twoWeeksLater);
+        }
+    });
+</script>
+</body>
+</html>
