@@ -2,27 +2,33 @@ package com.library.review.service;
 
 import com.library.review.client.BookServiceClient;
 import com.library.review.client.UserServiceClient;
+import com.library.review.controller.ReviewController;
 import com.library.review.dto.BookDTO;
 import com.library.review.dto.UserDTO;
 import com.library.review.entity.Review;
 import com.library.review.exception.ResourceNotFoundException;
 import com.library.review.repository.ReviewRepository;
-import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 @Service
-@RequiredArgsConstructor
-@Slf4j
 @Transactional
 public class ReviewService {
 
+    private static final Logger log = LoggerFactory.getLogger(ReviewService.class);
     private final ReviewRepository reviewRepository;
     private final BookServiceClient bookServiceClient;
     private final UserServiceClient userServiceClient;
+
+    public ReviewService(ReviewRepository reviewRepository, BookServiceClient bookServiceClient, UserServiceClient userServiceClient) {
+        this.reviewRepository = reviewRepository;
+        this.bookServiceClient = bookServiceClient;
+        this.userServiceClient = userServiceClient;
+    }
 
     public Page<Review> findAll(Pageable pageable) {
         log.debug("Finding all reviews with pagination");

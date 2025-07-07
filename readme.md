@@ -2,6 +2,7 @@
 ```bash
 docker-compose build
 docker-compose up -d
+export JAVA_HOME=$(/usr/libexec/java_home -v 21)
 ```
 
 #### Test connection:
@@ -20,7 +21,7 @@ nano /etc/mysql/mysql.conf.d/mysqld.cnf
 ```
 
 ### Start the server
-
+mvn spring-boot:run
 dev app:
 ```bash
 clear && ./mvnw spring-boot:run -Dspring-boot.run.profiles=dev

@@ -25,11 +25,14 @@ import lombok.RequiredArgsConstructor;
 
 @RestController
 @RequestMapping("/api/authors")
-@RequiredArgsConstructor
 public class AuthorController {
 
     private static final Logger log = LoggerFactory.getLogger(AuthorController.class);
     private final AuthorService authorService;
+
+    public AuthorController(AuthorService authorService) {
+        this.authorService = authorService;
+    }
 
     @GetMapping
     public Page<AuthorDTO> getAllAuthors(
