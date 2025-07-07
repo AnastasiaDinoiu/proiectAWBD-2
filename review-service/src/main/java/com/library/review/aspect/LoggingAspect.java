@@ -14,56 +14,27 @@ import java.util.Arrays;
 public class LoggingAspect {
     private static final Logger log = LoggerFactory.getLogger(LoggingAspect.class);
 
-    @Pointcut("@within(org.springframework.stereotype.Service)")
-    public void serviceLayer() {}
+    @Pointcut("execution(* com.library.review.controller.*.*(..)) && " +
+            "!execution(* org.springframework.boot.actuate..*(..))")
+    public void controllerMethods() {}
 
-    @Pointcut("@within(org.springframework.stereotype.Repository)")
-    public void repositoryLayer() {}
+    @Pointcut("execution(* com.library.review.service.*.*(..)) && " +
+            "!execution(* org.springframework.boot.actuate..*(..))")
+    public void serviceMethods() {}
 
-    @Pointcut("@within(org.springframework.web.bind.annotation.RestController) || " +
-            "@within(org.springframework.stereotype.Controller)")
-    public void controllerLayer() {}
-
-    @Before("serviceLayer() || repositoryLayer() || controllerLayer()")
+    @Before("controllerMethods() || serviceMethods()")
     public void logBefore(JoinPoint joinPoint) {
-        log.debug("Entering method: {} with arguments: {}",
-                joinPoint.getSignature().toShortString(),
-                Arrays.toString(joinPoint.getArgs()));
+        log.debug("Entering method: {}.{}(..) with arguments: {}",
+                joinPoint.getSignature().getDeclaringTypeName(),
+                joinPoint.getSignature().getName(),
+                joinPoint.getArgs());
     }
 
-    @AfterReturning(pointcut = "serviceLayer() || repositoryLayer() || controllerLayer()",
-            returning = "result")
+    @AfterReturning(pointcut = "controllerMethods() || serviceMethods()", returning = "result")
     public void logAfterReturning(JoinPoint joinPoint, Object result) {
-        log.debug("Method {} returned: {}",
-                joinPoint.getSignature().toShortString(),
+        log.debug("Method {}.{}(..) returned: {}",
+                joinPoint.getSignature().getDeclaringTypeName(),
+                joinPoint.getSignature().getName(),
                 result);
-    }
-
-    @AfterThrowing(pointcut = "serviceLayer() || repositoryLayer() || controllerLayer()",
-            throwing = "exception")
-    public void logAfterThrowing(JoinPoint joinPoint, Throwable exception) {
-        log.error("Exception in method: {} with message: {}",
-                joinPoint.getSignature().toShortString(),
-                exception.getMessage());
-    }
-
-    @Around("@annotation(org.springframework.transaction.annotation.Transactional)")
-    public Object logTransactionTime(ProceedingJoinPoint joinPoint) throws Throwable {
-        long start = System.currentTimeMillis();
-
-        try {
-            Object result = joinPoint.proceed();
-            long elapsedTime = System.currentTimeMillis() - start;
-            log.info("Transaction {} executed in {} ms",
-                    joinPoint.getSignature().toShortString(),
-                    elapsedTime);
-            return result;
-        } catch (Throwable throwable) {
-            long elapsedTime = System.currentTimeMillis() - start;
-            log.error("Transaction {} failed after {} ms",
-                    joinPoint.getSignature().toShortString(),
-                    elapsedTime);
-            throw throwable;
-        }
     }
 }
